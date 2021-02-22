@@ -1,5 +1,5 @@
 ﻿/*
-version: 2021.02.20
+version: 2021.02.22
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 优势:
@@ -16,10 +16,11 @@ If you want to add your own style to the built-in style, you can add it directly
 *可贴附指定目标
 
 todo:
-ANSI版本的支持。
-画阴影
-文字完美居中
+ANSI版本的支持
+ToolTip 的总在最上级别很高几乎任何程序都挡不了它
 文字太多导致没有显示完全的情况下给予明显提示（例如闪烁）
+文字完美居中
+画阴影
 */
 btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInOptionOrOptions:="")
 {
@@ -74,8 +75,9 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                     , FontRender:5                                   ; 0-5 (recommended value is 5)
                     , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
 
-        , Option99 := {TargetHWND:""                                 ; If omitted, active window will be used.
+       , Option99 := {TargetHWND:""                                  ; If omitted, active window will be used.
                     , CoordMode:"Screen"                             ; If omitted, A_CoordModeToolTip will be used.
+                    , Transparent:""                                 ; If omitted, 255 will be used.
                     , MouseNeverCoverToolTip:""                      ; If omitted, 1 will be used.
                     , DistanceBetweenMouseXAndToolTip:""             ; If omitted, 16 will be used. This value can be negative.
                     , DistanceBetweenMouseYAndToolTip:""}            ; If omitted, 16 will be used. This value can be negative.
@@ -84,7 +86,7 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
   if (BTT="")
     BTT:= new BeautifulToolTip()
 
-  BTT.ToolTip(Text, X, Y, WhichToolTip
+  return, BTT.ToolTip(Text, X, Y, WhichToolTip
             ; 如果 Style 是一个内置预设的名称，则使用对应内置预设的值，否则使用 Styles 本身的值。 Options 同理。
             , %BulitInStyleOrStyles%=""   ? BulitInStyleOrStyles   : %BulitInStyleOrStyles%
             , %BulitInOptionOrOptions%="" ? BulitInOptionOrOptions : %BulitInOptionOrOptions%)
@@ -94,9 +96,10 @@ Class BeautifulToolTip
 {
   ; 以下这些是类中静态变量。末尾带数字1的，表明最多存在1-20这样的变体。例如 _BTT1 就有 _BTT1 ... _BTT20 共20个类似变量。
   ; pToken, Monitors, ToolTipFontName, DIBWidth, DIBHeight
+  ; MouseNeverCoverToolTip, DistanceBetweenMouseXAndToolTip, DistanceBetweenMouseYAndToolTip 
   ; hBTT1（GUI句柄）, hbm1, hdc1, obm1, G1
   ; SavedText1, SavedOptions1, SavedX1, SavedY1, SavedW1, SavedH1, SavedCoordMode1, SavedTargetHWND1
-  static MouseNeverCoverToolTip:=1, DistanceBetweenMouseXAndToolTip:=16, DistanceBetweenMouseYAndToolTip:=16, DebugMode:=0
+  static DebugMode:=0
 
   __New()
   {
@@ -165,8 +168,8 @@ Class BeautifulToolTip
   ToolTip(Text:="", X:="", Y:="", WhichToolTip:="", Styles:="", Options:="")
   {
     ; 给出 WhichToolTip 的默认值1，并限制 WhichToolTip 的范围为 1-20
-    WhichToolTip:=(WhichToolTip="") ? 1 : Range(WhichToolTip, 1, 20)
-    ; 检查并解析 Options 。无论不传参、部分传参、完全传参，此函数均能正确返回所需参数。
+    NonNull(WhichToolTip, 1, 1, 20)
+    ; 检查并解析 Styles 与 Options 。无论不传参、部分传参、完全传参，此函数均能正确返回所需参数。
     O:=this._CheckStylesAndOptions(Styles, Options)
 
     ; 判断显示内容是否发生变化。由于前面给了 Options 一个默认值，所以首次进来时下面的 O.Options!=SavedOptions 是必然成立的。
@@ -179,14 +182,17 @@ Class BeautifulToolTip
       Gdip_GraphicsClear(this["G" WhichToolTip])
       UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip])
       ; 清空变量
-        this["SavedText" WhichToolTip]       := ""
-      , this["SavedOptions" WhichToolTip]    := ""
-      , this["SavedX" WhichToolTip]          := ""
-      , this["SavedY" WhichToolTip]          := ""
-      , this["SavedW" WhichToolTip]          := ""
-      , this["SavedH" WhichToolTip]          := ""
-      , this["SavedCoordMode" WhichToolTip]  := ""
-      , this["SavedTargetHWND" WhichToolTip] := ""
+        this["SavedText" WhichToolTip]        := ""
+      , this["SavedOptions" WhichToolTip]     := ""
+      , this["SavedX" WhichToolTip]           := ""
+      , this["SavedY" WhichToolTip]           := ""
+      , this["SavedW" WhichToolTip]           := ""
+      , this["SavedH" WhichToolTip]           := ""
+      , this["SavedTargetHWND" WhichToolTip]  := ""
+      , this["SavedCoordMode" WhichToolTip]   := ""
+      , this["SavedTransparent" WhichToolTip] := ""
+
+      return
     }
     else if (FirstCallOrNeedToUpdate)		; First Call or NeedToUpdate
     {
@@ -293,55 +299,70 @@ Class BeautifulToolTip
       this._CalculateDisplayPosition(X, Y, RectWithBorderWidth, RectWithBorderHeight, O)
 
       ; 显示
-      UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip], X, Y, RectWithBorderWidth, RectWithBorderHeight)
+      UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip]
+                        , X, Y, RectWithBorderWidth, RectWithBorderHeight, O.Transparent)
 
       ; 保存参数值，以便之后比对参数值是否改变
-        this["SavedText" WhichToolTip]       := Text
-      , this["SavedOptions" WhichToolTip]    := O.Checksum
-      , this["SavedX" WhichToolTip]          := X   ; 这里的 X,Y 是经过 _CalculateDisplayPosition() 计算后的新 X,Y
-      , this["SavedY" WhichToolTip]          := Y
-      , this["SavedW" WhichToolTip]          := RectWithBorderWidth
-      , this["SavedH" WhichToolTip]          := RectWithBorderHeight
-      , this["SavedCoordMode" WhichToolTip]  := O.CoordMode
-      , this["SavedTargetHWND" WhichToolTip] := O.TargetHWND
+        this["SavedText" WhichToolTip]        := Text
+      , this["SavedOptions" WhichToolTip]     := O.Checksum
+      , this["SavedX" WhichToolTip]           := X   ; 这里的 X,Y 是经过 _CalculateDisplayPosition() 计算后的新 X,Y
+      , this["SavedY" WhichToolTip]           := Y
+      , this["SavedW" WhichToolTip]           := RectWithBorderWidth
+      , this["SavedH" WhichToolTip]           := RectWithBorderHeight
+      , this["SavedTargetHWND" WhichToolTip]  := O.TargetHWND
+      , this["SavedCoordMode" WhichToolTip]   := O.CoordMode
+      , this["SavedTransparent" WhichToolTip] := O.Transparent
 
       SetBatchLines, %SavedBatchLines%
     }
-    ; x,y 任意一个跟随鼠标 或 使用窗口或客户区模式（窗口大小可能发生改变）
-    ; 或 坐标模式发生变化 或 目标窗口发生变化 这4种情况可能需要移动位置，需要进行坐标计算。
+    ; x,y 任意一个跟随鼠标位置 或 使用窗口或客户区模式（窗口大小可能发生改变或者窗口发生移动）
+    ; 或 目标窗口发生变化 或 坐标模式发生变化
+    ; 或 整体透明度发生变化 这5种情况可能需要移动位置，需要进行坐标计算。
     else if ((X="" or Y="") or O.CoordMode!="Screen"
-          or O.CoordMode!=this.SavedCoordMode or O.TargetHWND!=this.SavedTargetHWND)
+          or O.TargetHWND!=this.SavedTargetHWND or O.CoordMode!=this.SavedCoordMode
+          or O.Transparent!=this.SavedTransparent)
     {
       ; 返回文本框不超出目标范围（比如屏幕范围）的最佳坐标。
       this._CalculateDisplayPosition(X, Y, this["SavedW" WhichToolTip], this["SavedH" WhichToolTip], O)
-      ; 判断文本框显示位置是否发生改变
-      if (X!=this["SavedX" WhichToolTip] or Y!=this["SavedY" WhichToolTip])
+      ; 判断文本框 显示位置
+      ; 或 显示透明度 是否发生改变
+      if (X!=this["SavedX" WhichToolTip] or Y!=this["SavedY" WhichToolTip]
+      or  O.Transparent!=this.SavedTransparent)
       {
         ; 显示
         UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip]
-                          , X, Y, this["SavedW" WhichToolTip], this["SavedH" WhichToolTip])
+                          , X, Y, this["SavedW" WhichToolTip], this["SavedH" WhichToolTip], O.Transparent)
 
         ; 保存新的位置
-          this["SavedX" WhichToolTip]          := X
-        , this["SavedY" WhichToolTip]          := Y
-        , this["SavedCoordMode" WhichToolTip]  := O.CoordMode
-        , this["SavedTargetHWND" WhichToolTip] := O.TargetHWND
+          this["SavedX" WhichToolTip]           := X
+        , this["SavedY" WhichToolTip]           := Y
+        , this["SavedTargetHWND" WhichToolTip]  := O.TargetHWND
+        , this["SavedCoordMode" WhichToolTip]   := O.CoordMode
+        , this["SavedTransparent" WhichToolTip] := O.Transparent
       }
     }
+
+    ret:={Hwnd : this["hBTT" WhichToolTip]
+        , X    : X
+        , Y    : Y
+        , W    : this["SavedW" WhichToolTip]
+        , H    : this["SavedH" WhichToolTip]}
+    return, ret
   }
 
   ; 此函数确保传入空值或者错误值均可返回正确值。
   _CheckStylesAndOptions(Styles, Options)
   {
-      O                 := IsObject(Styles)     ? Styles.Clone()       : Object()
-    , O.Border          := O.Border=""          ? 1                    : Range(O.Border, 0, 20)        ; 细边框  	默认1 0-20
-    , O.Rounded         := O.Rounded=""         ? 3                    : Range(O.Rounded, 0, 30)       ; 圆角    	默认3 0-30
-    , O.Margin          := O.Margin=""          ? 5                    : Range(O.Margin, 0, 30)        ; 边距    	默认5 0-30
-    , O.TextColor       := O.TextColor=""       ? 0xff575757           : O.TextColor                   ; 文本色  	默认0xff575757
-    , O.BackgroundColor := O.BackgroundColor="" ? 0xffffffff           : O.BackgroundColor             ; 背景色  	默认0xffffffff
-    , O.Font            := O.Font=""            ? this.ToolTipFontName : O.Font                        ; 字体    	默认与 ToolTip 一致
-    , O.FontSize        := O.FontSize=""        ? 12                   : O.FontSize                    ; 字号   		默认12
-    , O.FontRender      := O.FontRender=""      ? 5                    : Range(O.FontRender, 0, 5)     ; 渲染模式		默认5 0-5
+      O := {}
+    , O.Border          := NonNull_Ret(Styles.Border         , 1                   , 0 , 20)  ; 细边框  	默认1 0-20
+    , O.Rounded         := NonNull_Ret(Styles.Rounded        , 3                   , 0 , 30)  ; 圆角    	默认3 0-30
+    , O.Margin          := NonNull_Ret(Styles.Margin         , 5                   , 0 , 30)  ; 边距    	默认5 0-30
+    , O.TextColor       := NonNull_Ret(Styles.TextColor      , 0xff575757          , "", "")  ; 文本色  	默认0xff575757
+    , O.BackgroundColor := NonNull_Ret(Styles.BackgroundColor, 0xffffffff          , "", "")  ; 背景色  	默认0xffffffff
+    , O.Font            := NonNull_Ret(Styles.Font           , this.ToolTipFontName, "", "")  ; 字体    	默认与 ToolTip 一致
+    , O.FontSize        := NonNull_Ret(Styles.FontSize       , 12                  , "", "")  ; 字号    	默认12
+    , O.FontRender      := NonNull_Ret(Styles.FontRender     , 5                   , 0 , 5 )  ; 渲染模式	默认5 0-5
+    , O.FontStyle       := Styles.FontStyle                                                   ; 字体样式	默认无
 
     ; a:=0xaabbccdd 下面是运算规则
     ; a>>16    = 0xaabb
@@ -350,34 +371,28 @@ Class BeautifulToolTip
     ; a&0xff   = 0xdd
     ; 0x88<<16 = 0x880000
     ; 0x880000+0xbbcc = 0x88bbcc
-    , BlendedColor      := ((O.BackgroundColor>>24)<<24) + (O.TextColor&0xffffff)                      ; 混合色 背景色的透明度与文本色混合
-    , O.BorderColor     := O.BorderColor=""      ? BlendedColor         : O.BorderColor                ; 细边框色  		默认混合色
+    , BlendedColor      := ((O.BackgroundColor>>24)<<24) + (O.TextColor&0xffffff)             ; 混合色		背景色的透明度与文本色混合
+    , O.BorderColor     := NonNull_Ret(Styles.BorderColor    , BlendedColor        , "", "")  ; 细边框色	默认混合色
 
     ; 名字太长，建个缩写副本。
-    , O.BGCLGS          := O.BackgroundColorLinearGradientStart                                        ; 背景渐变色		默认无
-    , O.BGCLGE          := O.BackgroundColorLinearGradientEnd                                          ; 背景渐变色		默认无
-    , O.BGCLGD          := O.BackgroundColorLinearGradientDirection                                    
-    , O.BGCLGD          := O.BGCLGD=""           ? ""                   : Range(O.BGCLGD, 1, 3)        ; 背景渐变方向	默认无 1-3
-    , O.FontStyle       := O.FontStyle                                                                 ; 字体样式    	默认无
+    , O.BGCLGS := Styles.BackgroundColorLinearGradientStart                                   ; 背景渐变色		默认无
+    , O.BGCLGE := Styles.BackgroundColorLinearGradientEnd                                     ; 背景渐变色		默认无
+    , O.BGCLGD := NonNull_Ret(Styles.BackgroundColorLinearGradientDirection, "", 1 , 3)       ; 背景渐变方向	默认无 1-3
 
-    , O.TargetHWND      := Options.TargetHWND="" ? WinExist("A")        : Options.TargetHWND+0         ; 目标句柄    	默认活动窗口
-    , O.CoordMode       := Options.CoordMode=""  ? A_CoordModeToolTip   : Options.CoordMode            ; 坐标模式    	默认与 ToolTip 一致
-
-    ; 名字太长，一行写不下，故缩短。
-    , temp1:=Options.MouseNeverCoverToolTip
-    , temp2:=Options.DistanceBetweenMouseXAndToolTip
-    , temp3:=Options.DistanceBetweenMouseYAndToolTip
-    , this.MouseNeverCoverToolTip          := temp1="" ? this.MouseNeverCoverToolTip          : temp1
-    , this.DistanceBetweenMouseXAndToolTip := temp2="" ? this.DistanceBetweenMouseXAndToolTip : temp2
-    , this.DistanceBetweenMouseYAndToolTip := temp3="" ? this.DistanceBetweenMouseYAndToolTip : temp3
+    , O.TargetHWND  := NonNull_Ret(Options.TargetHWND , WinExist("A")     , "", "")           ; 目标句柄		默认活动窗口
+    , O.CoordMode   := NonNull_Ret(Options.CoordMode  , A_CoordModeToolTip, "", "")           ; 坐标模式		默认与 ToolTip 一致
+    , O.Transparent := NonNull_Ret(Options.Transparent, 255               , 0 , 255)          ; 整体透明度	默认255
+    , O.MouseNeverCoverToolTip          := NonNull_Ret(Options.MouseNeverCoverToolTip         , 1 , 0 , 1 ) ; 鼠标永不遮挡文本框
+    , O.DistanceBetweenMouseXAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseXAndToolTip, 16, "", "") ; 鼠标与文本框的X距离
+    , O.DistanceBetweenMouseYAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseYAndToolTip, 16, "", "") ; 鼠标与文本框的Y距离
 
     ; 难以比对两个对象是否一致，所以造一个变量比对。
     ; 这里的校验因素，必须是那些改变后会使画面内容也产生变化的因素。
-    ; 所以没有 TargetHWND 和 CoordMode ，因为这两个因素只影响位置。
-    , O.Checksum        := Format("{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}"
-                                , O.Border, O.Rounded, O.Margin, O.BorderColor, O.TextColor
-                                , O.BackgroundColor, O.BGCLGS, O.BGCLGE, O.BGCLGD
-                                , O.Font, O.FontSize, O.FontRender, O.FontStyle)
+    ; 所以没有 TargetHWND 和 CoordMode 和 Transparent ，因为这三个因素只影响位置。
+    , O.Checksum := Format("{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}"
+                         , O.Border, O.Rounded, O.Margin, O.BorderColor, O.TextColor
+                         , O.BackgroundColor, O.BGCLGS, O.BGCLGE, O.BGCLGD
+                         , O.Font, O.FontSize, O.FontRender, O.FontStyle)
     return, O
   }
 
@@ -490,8 +505,8 @@ Class BeautifulToolTip
       DPIScale := A_ScreenDPI/96
     ; 为跟随鼠标显示的文本框增加一个距离，避免鼠标和文本框挤一起发生遮挡。
     ; 因为前面需要用到原始的 DisplayX 和 DisplayY 进行计算，所以在这里才增加距离。
-    , DisplayX := (X="") ? DisplayX+this.DistanceBetweenMouseXAndToolTip*DPIScale : DisplayX
-    , DisplayY := (Y="") ? DisplayY+this.DistanceBetweenMouseYAndToolTip*DPIScale : DisplayY
+    , DisplayX := (X="") ? DisplayX+Options.DistanceBetweenMouseXAndToolTip*DPIScale : DisplayX
+    , DisplayY := (Y="") ? DisplayY+Options.DistanceBetweenMouseYAndToolTip*DPIScale : DisplayY
 
     ; 处理目标边缘（右和下）的情况，让文本框可以贴边显示，不会超出目标外。
     , DisplayX := (DisplayX+W>=TargetRight)  ? TargetRight-W  : DisplayX
@@ -506,13 +521,13 @@ Class BeautifulToolTip
     ; X跟随 Y固定。0和1919都要测
     ; Y跟随 X固定。0和1079都要测
     ; X固定 Y固定。此种情况文本框可被鼠标遮挡，无需测试。
-    if  (this.MouseNeverCoverToolTip=1
+    if  (Options.MouseNeverCoverToolTip=1
     and (X="" or Y="")
     and MouseX>=DisplayX and MouseY>=DisplayY and MouseX<=DisplayX+W and MouseY<=DisplayY+H)
     {
       ; MouseY-H-16 是往上弹，应对在左下角和右下角的情况。
       ; MouseY+H+16 是往下弹，应对在右上角和左上角的情况。
-      ; 这里不要去用 Abs(this.DistanceBetweenMouseYAndToolTip) 替代 16。因为当前者很大时，显示效果不好。
+      ; 这里不要去用 Abs(Options.DistanceBetweenMouseYAndToolTip) 替代 16。因为当前者很大时，显示效果不好。
       ; 优先往上弹，如果不超限，则上弹。如果超限则往下弹，下弹超限，则不弹。
       DisplayY := MouseY-H-16>=TargetTop ? MouseY-H-16 : MouseY+H+16<=TargetBottom ? MouseY+16 : DisplayY
     }
@@ -522,15 +537,15 @@ Class BeautifulToolTip
   }
 }
 
-NonNull(Value1, Value2)
+NonNull(ByRef var, DefaultValue, MinValue, MaxValue)		; 237ms
 {
-  return, Value1="" ? Value2 : Value1
+	var:= var="" ? DefaultValue : MinValue="" ? (MaxValue="" ? var : Min(var, MaxValue)) : (MaxValue!="" ? Max(Min(var, MaxValue), MinValue) : Max(var, MinValue))
 }
 
-Range(Value, MinValue, MaxValue)
+; 与 NonNull 一致，区别是通过 return 返回值，而不是 ByRef。
+NonNull_Ret(var, DefaultValue, MinValue, MaxValue)			; 237ms
 {
-  ; 三元的写法不会更快
-  return, Max(Min(Value, MaxValue), MinValue)
+	return, var="" ? DefaultValue : MinValue="" ? (MaxValue="" ? var : Min(var, MaxValue)) : (MaxValue!="" ? Max(Min(var, MaxValue), MinValue) : Max(var, MinValue))
 }
 
 ; 为了统一参数的传输，以及特殊模式的设置，修改了gdip库的 Gdip_TextToGraphics() 函数。

@@ -4,7 +4,7 @@ CoordMode, ToolTip, Screen
 
 Text1=
 (
-ToolTip 会闪烁.
+ToolTip 会闪烁。
 ToolTip will blinking.
 
 1234567890
@@ -15,7 +15,7 @@ zxcvbnm,./
 
 Text2=
 (
-BeautifulToolTip 不会闪烁.
+BeautifulToolTip 不会闪烁。
 BeautifulToolTip will not blinking.
 
 1234567890

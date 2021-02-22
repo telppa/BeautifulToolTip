@@ -1,5 +1,6 @@
 ﻿#SingleInstance Force
 SetBatchLines, -1
+CoordMode, ToolTip, Client
 
 Text=
 (
@@ -14,15 +15,19 @@ For more parameters that can be set, see the description in btt() function.
 
 Gui, +Hwndtarget		; get Hwnd
 Gui, Font, s60
-Gui, Add, Text, x0 y0 w800 h600 Center vt, 试试移动窗口。`n`nTry Move this window.
+Gui, Add, Text, x0 y0 w800 h350 Center, 试试移动窗口。`n`nTry Move this window.
+Gui, Font, s20
+Gui, Add, Text, x0 y350 w800 h300, 此示例仅提供思路，你需要自行完善。`n`nThis example only provides ideas, you need to improve it by yourself.
 Gui, Show, w800 h600 x0 y0 NA
-
-CoordMode, ToolTip, Client
 
 SetTimer, Show, 10
 Sleep, 10000
 ExitApp
 
 Show:
-	btt(Text,800-1,600-1,,"Style1",{targethwnd:target})
+	btt(Text,800-1,600-1,,"Style1",{TargetHWND:target})
+return
+
+GuiClose:
+	ExitApp
 return
