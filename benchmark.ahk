@@ -63,7 +63,11 @@ gosub, performance
 ExitApp
 
 performance:
-	; 显示位置更新+动态内容 1782新 12211老
+	; 显示位置更新+动态内容
+	; btt 2114.6、300
+	; btt 全局 SetWindowPos 2113.8、298.4
+	; btt 新建时 SetWindowPos 2125.6、309.8
+	; ToolTip 14864、634
 	计时()
 	loop, 50
 	{
@@ -90,7 +94,11 @@ performance:
 	; ---------------------------------
 
 
-	; 显示位置更新+静态内容 40.42新 9685老
+	; 显示位置更新+静态内容
+	; btt 217.2、27.6
+	; btt 全局 SetWindowPos 213.6、33.2
+	; btt 新建时 SetWindowPos 212、31.6
+	; ToolTip 10956、549
 	计时()
 	loop, 50
 	{
@@ -111,7 +119,11 @@ performance:
 	; ---------------------------------
 
 
-	; 显示位置固定+静态内容 5.67新 6356老
+	; 显示位置固定+静态内容
+	; btt 197.2、17.2
+	; btt 全局 SetWindowPos 211.2、20.6
+	; btt 新建时 SetWindowPos 205、19.8
+	; ToolTip 7892、270
 	计时()
 	loop, 50
 	{

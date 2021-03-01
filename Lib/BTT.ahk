@@ -1,6 +1,21 @@
 ﻿/*
-version: 2021.02.22
 If you want to add your own style to the built-in style, you can add it directly in btt().
+
+version:
+2021.03.01
+
+changelog:
+2021.03.01
+  BTT 的总在最上级别现在跟 ToolTip 一样高了。
+  解决 BTT 被不明原因置底导致误以为没显示的问题。
+  增加 Style6 。
+  文字显示更加居中。
+2021.02.22
+  增加返回值与 Transparent 参数。
+
+todo:
+ANSI版本的支持
+文字太多导致没有显示完全的情况下给予明显提示（例如闪烁）
 
 优势:
 *高性能				是内置 ToolTip 2-1000 倍性能（文本越大性能对比越大，多数普通应用场景2-5倍性能）
@@ -14,13 +29,6 @@ If you want to add your own style to the built-in style, you can add it directly
 *缩放显示支持
 *跟随鼠标不出界
 *可贴附指定目标
-
-todo:
-ANSI版本的支持
-ToolTip 的总在最上级别很高几乎任何程序都挡不了它
-文字太多导致没有显示完全的情况下给予明显提示（例如闪烁）
-文字完美居中
-画阴影
 */
 btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInOptionOrOptions:="")
 {
@@ -55,6 +63,12 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                    , BackgroundColorLinearGradientStart:0xff134E5E
                    , BackgroundColorLinearGradientEnd:0xff326f69
                    , BackgroundColorLinearGradientDirection:1}
+
+       , Style6  := {Border:2
+                   , Rounded:5
+                   , TextColor:0xffCAE682
+                   , BackgroundColor:0xff434343
+                   , FontSize:14}
 
        ; You can customize your own style.
        ; All supported parameters are listed below. All parameters can be omitted.
@@ -302,6 +316,21 @@ Class BeautifulToolTip
       UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip]
                         , X, Y, RectWithBorderWidth, RectWithBorderHeight, O.Transparent)
 
+      ; 因为 BTT 总会在使用一段时间后，被不明原因的置底，导致显示内容被其它窗口遮挡，以为没有正常显示，所以这里提升Z序到最上面！
+      ; 已测试过，此方法效率极高，远超 WinSet, Top 命令。
+      ; hWndInsertAfter
+      ; 	HWND_TOPMOST:=-1
+      ; uFlags
+      ; 	SWP_NOSIZE:=0x0001
+      ; 	SWP_NOMOVE:=0x0002
+      ; 	SWP_NOREDRAW:=0x0008
+      ; 	SWP_NOACTIVATE:=0x0010
+      ; 	SWP_NOOWNERZORDER:=0x0200
+      ; 	SWP_NOSENDCHANGING:=0x0400
+      ; 	SWP_DEFERERASE:=0x2000
+      ; 	SWP_ASYNCWINDOWPOS:=0x4000
+      DllCall("SetWindowPos", "ptr", this["hBTT" WhichToolTip], "ptr", -1, "int", 0, "int", 0, "int", 0, "int", 0, "uint", 26139)
+
       ; 保存参数值，以便之后比对参数值是否改变
         this["SavedText" WhichToolTip]        := Text
       , this["SavedOptions" WhichToolTip]     := O.Checksum
@@ -537,13 +566,13 @@ Class BeautifulToolTip
   }
 }
 
-NonNull(ByRef var, DefaultValue, MinValue, MaxValue)		; 237ms
+NonNull(ByRef var, DefaultValue, MinValue:="", MaxValue:="")		; 237ms
 {
 	var:= var="" ? DefaultValue : MinValue="" ? (MaxValue="" ? var : Min(var, MaxValue)) : (MaxValue!="" ? Max(Min(var, MaxValue), MinValue) : Max(var, MinValue))
 }
 
 ; 与 NonNull 一致，区别是通过 return 返回值，而不是 ByRef。
-NonNull_Ret(var, DefaultValue, MinValue, MaxValue)			; 237ms
+NonNull_Ret(var, DefaultValue, MinValue:="", MaxValue:="")			; 237ms
 {
 	return, var="" ? DefaultValue : MinValue="" ? (MaxValue="" ? var : Min(var, MaxValue)) : (MaxValue!="" ? Max(Min(var, MaxValue), MinValue) : Max(var, MinValue))
 }
@@ -569,8 +598,12 @@ Gdip_TextToGraphics2(pGraphics, Text, Options, Measure:=0)
 
   ; 设置文字格式化样式，LineLimit = 0x00002000 只显示完整的行。
   ; 比如最后一行，因为布局高度有限，只能显示出一半，此时就会让它完全不显示。
-	hStringFormat := Gdip_StringFormatCreate(0x00002000)
-	if !hStringFormat
+  ; 直接使用 Gdip_StringFormatGetGeneric(1) 包含 LineLimit 设置，同时可以实现左右空白区域最小化。
+  ; 但这样有个副作用，那就是无法精确的设置文本框的宽度了，同时最右边文字的间距会被压缩。
+  ; 例如指定宽度800，可能返回的宽度是793，因为右边没有用空白补上。
+  ; 好处是右边几乎没有空白区域，左边也没有，所以接近完美的实现文字居中了。
+	; hStringFormat := Gdip_StringFormatCreate(0x00002000)
+	; if !hStringFormat
 		hStringFormat := Gdip_StringFormatGetGeneric(1)
 
   ; 设置文字颜色
@@ -593,9 +626,9 @@ Gdip_TextToGraphics2(pGraphics, Text, Options, Measure:=0)
 
 	Gdip_SetStringFormatAlign(hStringFormat, Align:=0)                         ; 设置左对齐
 	Gdip_SetTextRenderingHint(pGraphics, Options.FontRender)                   ; 设置渲染模式
-	CreateRectF(RC                                                             ; x,y 需要至少为0
-            , Options.X="" ? 0 : Options.X
-            , Options.Y="" ? 0 : Options.Y
+	CreateRectF(RC
+            , NonNull_Ret(Options.X, 0)                                      ; x,y 需要至少为0
+            , NonNull_Ret(Options.Y, 0)
             , Options.Width, Options.Height)                                 ; 宽高可以为空
 	returnRC := Gdip_MeasureString(pGraphics, Text, hFont, hStringFormat, RC)  ; 计算大小
 
