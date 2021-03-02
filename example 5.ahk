@@ -21,11 +21,14 @@ OwnStyle := {Border:20
 					, Rounded:30
 					, Margin:30
 					, BorderColor:0xffaabbcc                         ; ARGB
+					, BorderColorLinearGradientStart:0xff8DA5D3      ; ARGB
+					, BorderColorLinearGradientEnd:0xffF4CFC9        ; ARGB
+					, BorderColorLinearGradientDirection:4           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
 					, TextColor:0xff112233                           ; ARGB
 					, BackgroundColor:0xff778899                     ; ARGB
 					, BackgroundColorLinearGradientStart:0xffF4CFC9  ; ARGB
 					, BackgroundColorLinearGradientEnd:0xff8DA5D3    ; ARGB
-					, BackgroundColorLinearGradientDirection:1       ; 1 = Horizontal   2 = Oblique   3 = Vertical
+					, BackgroundColorLinearGradientDirection:1       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
 					, Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
 					, FontSize:12
 					, FontRender:5                                   ; 0-5 (recommended value is 5)
