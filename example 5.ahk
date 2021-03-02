@@ -22,19 +22,19 @@ Template :=  {Border:20                                      ; If omitted, 1 wil
 					  , Rounded:30                                     ; If omitted, 3 will be used. Range 0-30.
 					  , Margin:30                                      ; If omitted, 5 will be used. Range 0-30.
 					  , BorderColor:0xffaabbcc                         ; ARGB
-					  , BorderColorLinearGradientStart:0xff8DA5D3      ; ARGB
-					  , BorderColorLinearGradientEnd:0xffF4CFC9        ; ARGB
-					  , BorderColorLinearGradientDirection:5           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+					  , BorderColorLinearGradientStart:0xff16a085      ; ARGB
+					  , BorderColorLinearGradientEnd:0xfff4d03f        ; ARGB
+					  , BorderColorLinearGradientDirection:3           ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
 					  , TextColor:0xff112233                           ; ARGB
-					  , TextColorLinearGradientStart:0xff8DA5D3        ; ARGB
-					  , TextColorLinearGradientEnd:0xffF4CFC9          ; ARGB
-					  , TextColorLinearGradientDirection:3             ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+					  , TextColorLinearGradientStart:0xff00416a        ; ARGB
+					  , TextColorLinearGradientEnd:0xffe4e5e6          ; ARGB
+					  , TextColorLinearGradientDirection:5             ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
 					  , BackgroundColor:0xff778899                     ; ARGB
-					  , BackgroundColorLinearGradientStart:0xffF4CFC9  ; ARGB
-					  , BackgroundColorLinearGradientEnd:0xff8DA5D3    ; ARGB
-					  , BackgroundColorLinearGradientDirection:5       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+					  , BackgroundColorLinearGradientStart:0xff8DA5D3  ; ARGB
+					  , BackgroundColorLinearGradientEnd:0xffF4CFC9    ; ARGB
+					  , BackgroundColorLinearGradientDirection:7       ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
 					  , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
-					  , FontSize:12                                    ; If omitted, 12 will be used.
+					  , FontSize:20                                    ; If omitted, 12 will be used.
 					  , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
 					  , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
 

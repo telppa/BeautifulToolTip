@@ -11,7 +11,7 @@ ret:=btt(Text,200,200,,"Style5")
 
 Text2:=""
 for k, v in ret
-	Text2.=k ":" v "`n`n"
+	Text2.=k " : " v "`n`n"
 
 btt(Text2,200,300,2,"Style6")
 

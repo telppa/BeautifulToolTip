@@ -1,4 +1,6 @@
 ﻿/*
+https://github.com/telppa/BeautifulToolTip
+
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 version:
@@ -8,6 +10,7 @@ changelog:
 2021.03.03
   文本色支持渐变。
   增加 Style8 。
+  增加3个渐变方向。
 2021.03.02
   细边框色支持渐变。
   增加 Style7 。
@@ -25,11 +28,11 @@ ANSI版本的支持
 文字太多导致没有显示完全的情况下给予明显提示（例如闪烁）
 
 优势:
-*高性能				是内置 ToolTip 2-1000 倍性能（文本越大性能对比越大，多数普通应用场景2-5倍性能）
-*高兼容				兼容内置 ToolTip 的一切，包括语法、WhichToolTip、A_CoordModeToolTip、自动换行等等
+*高性能				  是内置 ToolTip 2-1000 倍性能（文本越大性能对比越大，多数普通应用场景2-5倍性能）
+*高兼容				  兼容内置 ToolTip 的一切，包括语法、WhichToolTip、A_CoordModeToolTip、自动换行等等
 *简单易用				一行代码即使用 无需手动创建释放资源
 *多套内置风格		可通过模板快速实现自定义风格
-*可自定义风格		圆角大小 细边框（颜色、大小） 边距大小 文字（字体、字号、样式、颜色、渲染方式） 背景颜色（可用渐变色 支持横向斜向纵向）
+*可自定义风格		细边框（颜色、大小） 圆角 边距 文字（颜色、字体、字号、渲染方式、样式） 背景色 所有颜色支持渐变与透明 支持8个渐变方向
 *可自定义参数		跟随鼠标距离 文本框永不被遮挡 贴附目标句柄 坐标模式
 *不闪烁不乱跳
 *多显示器支持
@@ -40,15 +43,47 @@ ANSI版本的支持
 btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInOptionOrOptions:="")
 {
   static BTT
+       ; You can customize your own style.
+       ; All supported parameters are listed below. All parameters can be omitted.
+       ; Please share your custom style and include a screenshot. It will help a lot of people.
+       ; Attention:
+       ; Color => ARGB => Alpha Red Green Blue => 0x ff aa bb cc => 0xffaabbcc
+       , Style99 :=  {Border:20                                      ; If omitted, 1 will be used. Range 0-20.
+                    , Rounded:30                                     ; If omitted, 3 will be used. Range 0-30.
+                    , Margin:30                                      ; If omitted, 5 will be used. Range 0-30.
+                    , BorderColor:0xffaabbcc                         ; ARGB
+                    , BorderColorLinearGradientStart:0xff16a085      ; ARGB
+                    , BorderColorLinearGradientEnd:0xfff4d03f        ; ARGB
+                    , BorderColorLinearGradientDirection:3           ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+                    , TextColor:0xff112233                           ; ARGB
+                    , TextColorLinearGradientStart:0xff00416a        ; ARGB
+                    , TextColorLinearGradientEnd:0xffe4e5e6          ; ARGB
+                    , TextColorLinearGradientDirection:5             ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+                    , BackgroundColor:0xff778899                     ; ARGB
+                    , BackgroundColorLinearGradientStart:0xff8DA5D3  ; ARGB
+                    , BackgroundColorLinearGradientEnd:0xffF4CFC9    ; ARGB
+                    , BackgroundColorLinearGradientDirection:7       ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+                    , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
+                    , FontSize:20                                    ; If omitted, 12 will be used.
+                    , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
+                    , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
+
+       , Option99 := {TargetHWND:""                                  ; If omitted, active window will be used.
+                    , CoordMode:"Screen Relative Window Client"      ; If omitted, A_CoordModeToolTip will be used.
+                    , Transparent:""                                 ; If omitted, 255 will be used.
+                    , MouseNeverCoverToolTip:""                      ; If omitted, 1 will be used.
+                    , DistanceBetweenMouseXAndToolTip:""             ; If omitted, 16 will be used. This value can be negative.
+                    , DistanceBetweenMouseYAndToolTip:""}            ; If omitted, 16 will be used. This value can be negative.
+
        , Style1 := {TextColor:0xffeef8f6
-                   , BackgroundColor:0xff1b8dff
-                   , FontSize:14}
+                  , BackgroundColor:0xff1b8dff
+                  , FontSize:14}
 
        , Style2 := {Border:1
-                   , Rounded:8
-                   , TextColor:0xfff4f4f4
-                   , BackgroundColor:0xaa3e3d45
-                   , FontSize:14}
+                  , Rounded:8
+                  , TextColor:0xfff4f4f4
+                  , BackgroundColor:0xaa3e3d45
+                  , FontSize:14}
 
        , Style3 := {Border:2
                   , Rounded:0
@@ -96,46 +131,14 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                   , TextColor:0xffd9d9db
                   , BackgroundColor:0xff26293a}
 
-       ; You can customize your own style.
-       ; All supported parameters are listed below. All parameters can be omitted.
-       ; Please share your custom style and include a screenshot. It will help a lot of people.
-       ; Attention:
-       ; Color => ARGB => Alpha Red Green Blue => 0x ff aa bb cc => 0xffaabbcc
-       , Style99 :=  {Border:20                                      ; If omitted, 1 will be used. Range 0-20.
-                    , Rounded:30                                     ; If omitted, 3 will be used. Range 0-30.
-                    , Margin:30                                      ; If omitted, 5 will be used. Range 0-30.
-                    , BorderColor:0xffaabbcc                         ; ARGB
-                    , BorderColorLinearGradientStart:0xff8DA5D3      ; ARGB
-                    , BorderColorLinearGradientEnd:0xffF4CFC9        ; ARGB
-                    , BorderColorLinearGradientDirection:5           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
-                    , TextColor:0xff112233                           ; ARGB
-                    , TextColorLinearGradientStart:0xff8DA5D3        ; ARGB
-                    , TextColorLinearGradientEnd:0xffF4CFC9          ; ARGB
-                    , TextColorLinearGradientDirection:3             ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
-                    , BackgroundColor:0xff778899                     ; ARGB
-                    , BackgroundColorLinearGradientStart:0xffF4CFC9  ; ARGB
-                    , BackgroundColorLinearGradientEnd:0xff8DA5D3    ; ARGB
-                    , BackgroundColorLinearGradientDirection:5       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
-                    , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
-                    , FontSize:12                                    ; If omitted, 12 will be used.
-                    , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
-                    , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
-
-       , Option99 := {TargetHWND:""                                  ; If omitted, active window will be used.
-                    , CoordMode:"Screen"                             ; If omitted, A_CoordModeToolTip will be used.
-                    , Transparent:""                                 ; If omitted, 255 will be used.
-                    , MouseNeverCoverToolTip:""                      ; If omitted, 1 will be used.
-                    , DistanceBetweenMouseXAndToolTip:""             ; If omitted, 16 will be used. This value can be negative.
-                    , DistanceBetweenMouseYAndToolTip:""}            ; If omitted, 16 will be used. This value can be negative.
-
   ; 直接在 static 中初始化 BTT 会报错，所以只能这样写
   if (BTT="")
-    BTT:= new BeautifulToolTip()
+    BTT := new BeautifulToolTip()
 
   return, BTT.ToolTip(Text, X, Y, WhichToolTip
-            ; 如果 Style 是一个内置预设的名称，则使用对应内置预设的值，否则使用 Styles 本身的值。 Options 同理。
-            , %BulitInStyleOrStyles%=""   ? BulitInStyleOrStyles   : %BulitInStyleOrStyles%
-            , %BulitInOptionOrOptions%="" ? BulitInOptionOrOptions : %BulitInOptionOrOptions%)
+                    ; 如果 Style 是一个内置预设的名称，则使用对应内置预设的值，否则使用 Styles 本身的值。 Options 同理。
+                    , %BulitInStyleOrStyles%=""   ? BulitInStyleOrStyles   : %BulitInStyleOrStyles%
+                    , %BulitInOptionOrOptions%="" ? BulitInOptionOrOptions : %BulitInOptionOrOptions%)
 }
 
 Class BeautifulToolTip
@@ -254,10 +257,10 @@ Class BeautifulToolTip
       ; 之所以高度限制90%是因为两个原因，1是留出一些上下的空白，避免占满全屏，鼠标点不了其它地方，难以退出。
       ; 2是在计算文字区域时，即使已经给出了宽高度限制，且因为自动换行的原因，宽度的返回值通常在范围内，但高度的返回值偶尔还是会超过1行，所以提前留个余量。
       , MaxTextHeight:=(TargetSize.H*90)//100 - O.Margin*2 - O.Border*2
-      ; 为 Gdip_TextToGraphics2 计算区域提供高宽限制。
+      ; 为 _TextToGraphics 计算区域提供高宽限制。
       , O.Width:=MaxTextWidth, O.Height:=MaxTextHeight
       ; 计算文字显示区域 TextArea = x|y|width|height|chars|lines
-      , TextArea:=StrSplit(Gdip_TextToGraphics2(this["G" WhichToolTip], Text, O, Measure:=1), "|")
+      , TextArea:=StrSplit(this._TextToGraphics(this["G" WhichToolTip], Text, O, Measure:=1), "|")
       ; 这里务必向上取整。
       ; 向上的原因是，例如 1.2 如果四舍五入为 1，那么最右边的字符可能会显示不全。
       ; 取整的原因是，不取整无法画出完美的圆角矩形。
@@ -281,17 +284,7 @@ Class BeautifulToolTip
       if (O.BCLGD and O.BCLGS and O.BCLGE)                                    ; 渐变画刷 画细边框
       {
         Left:=0, Top:=0, Right:=Left+RectWithBorderWidth, Bottom:=Top+RectWithBorderHeight
-        switch, O.BCLGD
-        {
-          ; O.BCLGD 1是横向渐变，2、3、4是左上角到右下角斜向渐变，5是垂直渐变。
-          ; 因为 Border 比背景细很多，所以斜向渐变终点需使用横坐标的1/2，这样斜向渐变才能更加明显。
-          ; 也是因为上述原因，将斜向扩充为 2、3、4 共3种。
-          case, "1": pBrushBorder:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Top,       O.BCLGS, O.BCLGE)
-          case, "2": pBrushBorder:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Bottom//2, O.BCLGS, O.BCLGE)
-          case, "3": pBrushBorder:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Bottom,    O.BCLGS, O.BCLGE)
-          case, "4": pBrushBorder:=Gdip_CreateLinearGrBrush(Left, Top, Right//2, Bottom,    O.BCLGS, O.BCLGE)
-          case, "5": pBrushBorder:=Gdip_CreateLinearGrBrush(Left, Top, Left,     Bottom,    O.BCLGS, O.BCLGE)
-        }
+        pBrushBorder := this._CreateLinearGrBrush(O.BCLGD, O.BCLGS, O.BCLGE, Left, Top, Right, Bottom)
       }
       else
         pBrushBorder := Gdip_BrushCreateSolid(O.BorderColor)                  ; 纯色画刷 画细边框
@@ -310,15 +303,7 @@ Class BeautifulToolTip
       if (O.BGCLGD and O.BGCLGS and O.BGCLGE)                                 ; 渐变画刷 画文本框
       {
         Left:=O.Border, Top:=O.Border, Right:=Left+RectWidth, Bottom:=Top+RectHeight
-        switch, O.BGCLGD
-        {
-          ; O.BGCLGD 1是横向渐变，2、3、4是左上角到右下角斜向渐变，5是垂直渐变。
-          case, "1": pBrushBackground:=Gdip_CreateLinearGrBrush(Left, Top, Right   , Top,       O.BGCLGS, O.BGCLGE)
-          case, "2": pBrushBackground:=Gdip_CreateLinearGrBrush(Left, Top, Right   , Bottom//2, O.BGCLGS, O.BGCLGE)
-          case, "3": pBrushBackground:=Gdip_CreateLinearGrBrush(Left, Top, Right   , Bottom   , O.BGCLGS, O.BGCLGE)
-          case, "4": pBrushBackground:=Gdip_CreateLinearGrBrush(Left, Top, Right//2, Bottom   , O.BGCLGS, O.BGCLGE)
-          case, "5": pBrushBackground:=Gdip_CreateLinearGrBrush(Left, Top, Left    , Bottom   , O.BGCLGS, O.BGCLGE)
-        }
+        pBrushBackground := this._CreateLinearGrBrush(O.BGCLGD, O.BGCLGS, O.BGCLGE, Left, Top, Right, Bottom)
       }
       else
         pBrushBackground := Gdip_BrushCreateSolid(O.BackgroundColor)          ; 纯色画刷 画文本框
@@ -351,7 +336,7 @@ Class BeautifulToolTip
         TempText:=Text
 
       ; 写字到框上。这个函数使用 O 中的 X,Y 去调整文字的位置。
-      Gdip_TextToGraphics2(this["G" WhichToolTip], TempText, O)
+      this._TextToGraphics(this["G" WhichToolTip], TempText, O)
 
       ; 调试用，可显示计算得到的文字范围。
       if (this.DebugMode)
@@ -431,6 +416,99 @@ Class BeautifulToolTip
     return, ret
   }
 
+  ; 为了统一参数的传输，以及特殊模式的设置，修改了gdip库的 Gdip_TextToGraphics() 函数。
+  _TextToGraphics(pGraphics, Text, Options, Measure:=0)
+  {
+    static Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
+
+    ; 设置字体样式
+    Style := 0
+    For eachStyle, valStyle in StrSplit(Styles, "|")
+    {
+      if InStr(Options.FontStyle, valStyle)
+        Style |= (valStyle != "StrikeOut") ? (A_Index-1) : 8
+    }
+
+    ; 加载字体
+    hFontFamily := Gdip_FontFamilyCreate(Options.Font)
+    if !hFontFamily
+      hFontFamily := Gdip_FontFamilyCreateGeneric(1)
+    hFont := Gdip_FontCreate(hFontFamily, Options.FontSize, Style, Unit:=0)
+
+    ; 设置文字格式化样式，LineLimit = 0x00002000 只显示完整的行。
+    ; 比如最后一行，因为布局高度有限，只能显示出一半，此时就会让它完全不显示。
+    ; 直接使用 Gdip_StringFormatGetGeneric(1) 包含 LineLimit 设置，同时可以实现左右空白区域最小化。
+    ; 但这样有个副作用，那就是无法精确的设置文本框的宽度了，同时最右边文字的间距会被压缩。
+    ; 例如指定宽度800，可能返回的宽度是793，因为右边没有用空白补上。
+    ; 好处是右边几乎没有空白区域，左边也没有，所以接近完美的实现文字居中了。
+    ; hStringFormat := Gdip_StringFormatCreate(0x00002000)
+    ; if !hStringFormat
+      hStringFormat := Gdip_StringFormatGetGeneric(1)
+
+    ; 准备文本画刷
+    if (Options.TCLGD and Options.TCLGS and Options.TCLGE and Options.Width and Options.Height)   ; 渐变画刷
+    {
+        Left   := NonNull_Ret(Options.X, 0)
+      , Top    := NonNull_Ret(Options.Y, 0)
+      , Right  := Left + Options.Width
+      , Bottom := Top  + Options.Height
+      pBrush := this._CreateLinearGrBrush(Options.TCLGD, Options.TCLGS, Options.TCLGE, Left, Top, Right, Bottom)
+    }
+    else
+      pBrush := Gdip_BrushCreateSolid(Options.TextColor)                                          ; 纯色画刷
+
+    ; 检查参数是否齐全
+    if !(hFontFamily && hFont && hStringFormat && pBrush && pGraphics)
+    {
+      E := !pGraphics ? -2 : !hFontFamily ? -3 : !hFont ? -4 : !hStringFormat ? -5 : !pBrush ? -6 : 0
+      if pBrush
+        Gdip_DeleteBrush(pBrush)
+      if hStringFormat
+        Gdip_DeleteStringFormat(hStringFormat)
+      if hFont
+        Gdip_DeleteFont(hFont)
+      if hFontFamily
+        Gdip_DeleteFontFamily(hFontFamily)
+      return E
+    }
+
+    Gdip_SetStringFormatAlign(hStringFormat, Align:=0)                         ; 设置左对齐
+    Gdip_SetTextRenderingHint(pGraphics, Options.FontRender)                   ; 设置渲染模式
+    CreateRectF(RC
+              , NonNull_Ret(Options.X, 0)                                      ; x,y 需要至少为0
+              , NonNull_Ret(Options.Y, 0)
+              , Options.Width, Options.Height)                                 ; 宽高可以为空
+    returnRC := Gdip_MeasureString(pGraphics, Text, hFont, hStringFormat, RC)  ; 计算大小
+
+    if !Measure
+      _E := Gdip_DrawString(pGraphics, Text, hFont, hStringFormat, pBrush, RC)
+
+    Gdip_DeleteBrush(pBrush)
+    Gdip_DeleteFont(hFont)
+    Gdip_DeleteStringFormat(hStringFormat)
+    Gdip_DeleteFontFamily(hFontFamily)
+    return _E ? _E : returnRC
+  }
+
+  _CreateLinearGrBrush(Direction, StartColor, EndColor, Left, Top, Right, Bottom)
+  {
+    switch, Direction
+    {
+      ; Direction 1是横向渐变，2、3、4是左上角到右下角斜向渐变，5是垂直渐变，6、7、8是右上角到左下角斜向渐变。
+      ; 因为 Border 比背景细很多，所以斜向渐变终点需使用横坐标的1/2，这样斜向渐变才能更加明显。
+      ; 也是因为上述原因，将斜向扩充为 2、3、4 6、7、8 共6种。
+      case, "1": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right   , Top      , StartColor, EndColor)
+      case, "2": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right   , Bottom//2, StartColor, EndColor)
+      case, "3": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right   , Bottom   , StartColor, EndColor)
+      case, "4": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right//2, Bottom   , StartColor, EndColor)
+      case, "5": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Left    , Bottom   , StartColor, EndColor)
+      case, "6": pBrush:=Gdip_CreateLinearGrBrush(Right, Top, Right//2, Bottom   , StartColor, EndColor)
+      case, "7": pBrush:=Gdip_CreateLinearGrBrush(Right, Top, Left    , Bottom   , StartColor, EndColor)
+      case, "8": pBrush:=Gdip_CreateLinearGrBrush(Right, Top, Left    , Bottom//2, StartColor, EndColor)
+    }
+    return, pBrush
+  }
+
   ; 此函数确保传入空值或者错误值均可返回正确值。
   _CheckStylesAndOptions(Styles, Options)
   {
@@ -448,17 +526,17 @@ Class BeautifulToolTip
     ; 名字太长，建个缩写副本。
     , O.BCLGS  := Styles.BorderColorLinearGradientStart                                       ; 细边框渐变色		  默认无
     , O.BCLGE  := Styles.BorderColorLinearGradientEnd                                         ; 细边框渐变色		  默认无
-    , O.BCLGD  := NonNull_Ret(Styles.BorderColorLinearGradientDirection, "", 1 , 5)           ; 细边框渐变方向	  默认无 1-5
+    , O.BCLGD  := NonNull_Ret(Styles.BorderColorLinearGradientDirection, "", 1 , 8)           ; 细边框渐变方向	  默认无 1-8
 
     ; 名字太长，建个缩写副本。
     , O.TCLGS  := Styles.TextColorLinearGradientStart                                         ; 文本渐变色		    默认无
     , O.TCLGE  := Styles.TextColorLinearGradientEnd                                           ; 文本渐变色		    默认无
-    , O.TCLGD  := NonNull_Ret(Styles.TextColorLinearGradientDirection, "", 1 , 5)             ; 文本渐变方向	    默认无 1-5
+    , O.TCLGD  := NonNull_Ret(Styles.TextColorLinearGradientDirection, "", 1 , 8)             ; 文本渐变方向	    默认无 1-8
 
     ; 名字太长，建个缩写副本。
     , O.BGCLGS := Styles.BackgroundColorLinearGradientStart                                   ; 背景渐变色		    默认无
     , O.BGCLGE := Styles.BackgroundColorLinearGradientEnd                                     ; 背景渐变色		    默认无
-    , O.BGCLGD := NonNull_Ret(Styles.BackgroundColorLinearGradientDirection, "", 1 , 5)       ; 背景渐变方向	    默认无 1-5
+    , O.BGCLGD := NonNull_Ret(Styles.BackgroundColorLinearGradientDirection, "", 1 , 8)       ; 背景渐变方向	    默认无 1-8
 
     ; a:=0xaabbccdd 下面是运算规则
     ; a>>16    = 0xaabb
@@ -640,88 +718,6 @@ NonNull(ByRef var, DefaultValue, MinValue:="", MaxValue:="")		; 237ms
 NonNull_Ret(var, DefaultValue, MinValue:="", MaxValue:="")			; 237ms
 {
 	return, var="" ? DefaultValue : MinValue="" ? (MaxValue="" ? var : Min(var, MaxValue)) : (MaxValue!="" ? Max(Min(var, MaxValue), MinValue) : Max(var, MinValue))
-}
-
-; 为了统一参数的传输，以及特殊模式的设置，修改了gdip库的 Gdip_TextToGraphics() 函数。
-Gdip_TextToGraphics2(pGraphics, Text, Options, Measure:=0)
-{
-	static Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
-
-	; 设置字体样式
-	Style := 0
-	For eachStyle, valStyle in StrSplit(Styles, "|")
-	{
-		if InStr(Options.FontStyle, valStyle)
-			Style |= (valStyle != "StrikeOut") ? (A_Index-1) : 8
-	}
-
-	; 加载字体
-  hFontFamily := Gdip_FontFamilyCreate(Options.Font)
-	if !hFontFamily
-		hFontFamily := Gdip_FontFamilyCreateGeneric(1)
-	hFont := Gdip_FontCreate(hFontFamily, Options.FontSize, Style, Unit:=0)
-
-  ; 设置文字格式化样式，LineLimit = 0x00002000 只显示完整的行。
-  ; 比如最后一行，因为布局高度有限，只能显示出一半，此时就会让它完全不显示。
-  ; 直接使用 Gdip_StringFormatGetGeneric(1) 包含 LineLimit 设置，同时可以实现左右空白区域最小化。
-  ; 但这样有个副作用，那就是无法精确的设置文本框的宽度了，同时最右边文字的间距会被压缩。
-  ; 例如指定宽度800，可能返回的宽度是793，因为右边没有用空白补上。
-  ; 好处是右边几乎没有空白区域，左边也没有，所以接近完美的实现文字居中了。
-	; hStringFormat := Gdip_StringFormatCreate(0x00002000)
-	; if !hStringFormat
-		hStringFormat := Gdip_StringFormatGetGeneric(1)
-
-  ; 准备文本画刷
-  if (Options.TCLGD and Options.TCLGS and Options.TCLGE and Options.Width and Options.Height)   ; 渐变画刷
-  {
-      Left   := NonNull_Ret(Options.X, 0)
-    , Top    := NonNull_Ret(Options.Y, 0)
-    , Right  := Left + Options.Width
-    , Bottom := Top  + Options.Height
-    switch, Options.TCLGD
-    {
-      ; Options.TCLGD 1是横向渐变，2、3、4是左上角到右下角斜向渐变，5是垂直渐变。
-      case, "1": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Top,       Options.TCLGS, Options.TCLGE)
-      case, "2": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Bottom//2, Options.TCLGS, Options.TCLGE)
-      case, "3": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Bottom,    Options.TCLGS, Options.TCLGE)
-      case, "4": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right//2, Bottom,    Options.TCLGS, Options.TCLGE)
-      case, "5": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Left,     Bottom,    Options.TCLGS, Options.TCLGE)
-    }
-  }
-  else
-    pBrush := Gdip_BrushCreateSolid(Options.TextColor)                                          ; 纯色画刷
-
-	; 检查参数是否齐全
-	if !(hFontFamily && hFont && hStringFormat && pBrush && pGraphics)
-	{
-		E := !pGraphics ? -2 : !hFontFamily ? -3 : !hFont ? -4 : !hStringFormat ? -5 : !pBrush ? -6 : 0
-		if pBrush
-			Gdip_DeleteBrush(pBrush)
-		if hStringFormat
-			Gdip_DeleteStringFormat(hStringFormat)
-		if hFont
-			Gdip_DeleteFont(hFont)
-		if hFontFamily
-			Gdip_DeleteFontFamily(hFontFamily)
-		return E
-	}
-
-	Gdip_SetStringFormatAlign(hStringFormat, Align:=0)                         ; 设置左对齐
-	Gdip_SetTextRenderingHint(pGraphics, Options.FontRender)                   ; 设置渲染模式
-	CreateRectF(RC
-            , NonNull_Ret(Options.X, 0)                                      ; x,y 需要至少为0
-            , NonNull_Ret(Options.Y, 0)
-            , Options.Width, Options.Height)                                 ; 宽高可以为空
-	returnRC := Gdip_MeasureString(pGraphics, Text, hFont, hStringFormat, RC)  ; 计算大小
-
-	if !Measure
-		_E := Gdip_DrawString(pGraphics, Text, hFont, hStringFormat, pBrush, RC)
-
-	Gdip_DeleteBrush(pBrush)
-	Gdip_DeleteFont(hFont)
-	Gdip_DeleteStringFormat(hStringFormat)
-	Gdip_DeleteFontFamily(hFontFamily)
-	return _E ? _E : returnRC
 }
 
 ; https://autohotkey.com/boards/viewtopic.php?f=6&t=4379
