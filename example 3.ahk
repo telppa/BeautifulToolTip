@@ -21,5 +21,5 @@ ExitApp
 
 Show:
 	ToolTip, %Text%,, A_ScreenHeight-1
-	btt(Text,,A_ScreenHeight-1,,"Style1")
+	btt(Text,,A_ScreenHeight-1,,"Style2")
 return

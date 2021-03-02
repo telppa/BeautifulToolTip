@@ -1,5 +1,6 @@
 ﻿#SingleInstance Force
 SetBatchLines, -1
+CoordMode, ToolTip, Screen
 
 Text=
 (
@@ -17,23 +18,59 @@ It will help a lot of people.
 ; Please share your custom style and include a screenshot. It will help a lot of people.
 ; Attention:
 ; Color => ARGB => Alpha Red Green Blue => 0x ff aa bb cc => 0xffaabbcc
-OwnStyle := {Border:20
-					, Rounded:30
-					, Margin:30
-					, BorderColor:0xffaabbcc                         ; ARGB
-					, BorderColorLinearGradientStart:0xff8DA5D3      ; ARGB
-					, BorderColorLinearGradientEnd:0xffF4CFC9        ; ARGB
-					, BorderColorLinearGradientDirection:4           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
-					, TextColor:0xff112233                           ; ARGB
-					, BackgroundColor:0xff778899                     ; ARGB
-					, BackgroundColorLinearGradientStart:0xffF4CFC9  ; ARGB
-					, BackgroundColorLinearGradientEnd:0xff8DA5D3    ; ARGB
-					, BackgroundColorLinearGradientDirection:1       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
-					, Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
-					, FontSize:12
-					, FontRender:5                                   ; 0-5 (recommended value is 5)
-					, FontStyle:"Regular Bold Italic BoldItalic UnderlineStrikeout"}
+Template :=  {Border:20                                      ; If omitted, 1 will be used. Range 0-20.
+					  , Rounded:30                                     ; If omitted, 3 will be used. Range 0-30.
+					  , Margin:30                                      ; If omitted, 5 will be used. Range 0-30.
+					  , BorderColor:0xffaabbcc                         ; ARGB
+					  , BorderColorLinearGradientStart:0xff8DA5D3      ; ARGB
+					  , BorderColorLinearGradientEnd:0xffF4CFC9        ; ARGB
+					  , BorderColorLinearGradientDirection:5           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+					  , TextColor:0xff112233                           ; ARGB
+					  , TextColorLinearGradientStart:0xff8DA5D3        ; ARGB
+					  , TextColorLinearGradientEnd:0xffF4CFC9          ; ARGB
+					  , TextColorLinearGradientDirection:3             ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+					  , BackgroundColor:0xff778899                     ; ARGB
+					  , BackgroundColorLinearGradientStart:0xffF4CFC9  ; ARGB
+					  , BackgroundColorLinearGradientEnd:0xff8DA5D3    ; ARGB
+					  , BackgroundColorLinearGradientDirection:5       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+					  , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
+					  , FontSize:12                                    ; If omitted, 12 will be used.
+					  , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
+					  , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
 
-btt(Text,,,,OwnStyle)
+; Same as Style7
+OwnStyle1 := {Border:20
+					  , Rounded:30
+					  , Margin:30
+					  , BorderColor:0xffaabbcc
+					  , TextColor:0xff112233
+					  , BackgroundColorLinearGradientStart:0xffF4CFC9
+					  , BackgroundColorLinearGradientEnd:0xff8DA5D3
+					  , BackgroundColorLinearGradientDirection:1
+					  , FontStyle:"BoldItalic Underline"}
+
+; Same as Style8
+OwnStyle2 := {Border:3
+						, Rounded:30
+						, Margin:30
+						, BorderColorLinearGradientStart:0xffb7407c
+						, BorderColorLinearGradientEnd:0xff3881a7
+						, BorderColorLinearGradientDirection:3
+						, TextColor:0xffd9d9db
+						, BackgroundColor:0xff26293a}
+
+; On white background, FontRender = 4 better than 5
+OwnStyle3 := {BorderColor:0x00ffffff
+						, TextColorLinearGradientStart:0xff00b4db
+						, TextColorLinearGradientEnd:0xff004360
+						, TextColorLinearGradientDirection:1
+						, BackgroundColor:0x00ffffff
+						, FontSize:16
+						, FontRender:4
+						, FontStyle:"Bold"}
+
+btt(Text,,200,1,OwnStyle1)
+btt(Text,,410,2,OwnStyle2)
+btt(Text,,580,3,OwnStyle3)
 Sleep,10000
 ExitApp

@@ -37,10 +37,12 @@ Show:
 		GuiControl, , t, % "A_CoordModeToolTip:`n" A_CoordModeToolTip
 	}
 
-	btt(Text)
-	btt(Text,1900,1000,WhichToolTip:=2,"Style1")
-	btt(Text ellipsis,0,0,WhichToolTip:=3,"Style2")
-	btt(Text,,100,WhichToolTip:=4,"Style3")
-	btt(Text,100,,WhichToolTip:=5,"Style4")
-	btt(StrReplace(Text, "demo.", "linear gradient demo."),300,280,WhichToolTip:=6,"Style5")
+	btt(Text ellipsis)
+	btt(Text, A_ScreenWidth, A_ScreenHeight, WhichToolTip:=2, "Style1")
+	btt(Text, 0            , 0             , WhichToolTip:=3, "Style2")
+	btt(Text, A_ScreenWidth, 0             , WhichToolTip:=4, "Style3")
+	btt(Text, 0            , A_ScreenHeight, WhichToolTip:=5, "Style4")
+	btt(Text,              , 100           , WhichToolTip:=6, "Style5")
+	btt(Text, 100          ,               , WhichToolTip:=7, "Style6")
+	btt(Text, 300          , 220           , WhichToolTip:=8, "Style7")
 return

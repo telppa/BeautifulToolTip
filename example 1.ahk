@@ -4,7 +4,13 @@ btt("This is BeautifulToolTip")
 Sleep, 3000
 
 CoordMode, ToolTip, Screen
-btt("This is BeautifulToolTip`n`nCoordMode = Screen`n`nWhichToolTip = 2",500,500,2)
+Text=
+(
+This is BeautifulToolTip
+CoordMode = Screen
+WhichToolTip = 2
+)
+btt(Text,500,500,2)
 Sleep, 5000
 
 btt()

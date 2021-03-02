@@ -25,7 +25,7 @@ Sleep, 10000
 ExitApp
 
 Show:
-	btt(Text,800-1,600-1,,"Style1",{TargetHWND:target})
+	btt(Text,800-1,600-1,,"Style3",{TargetHWND:target})
 return
 
 GuiClose:

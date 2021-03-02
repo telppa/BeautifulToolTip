@@ -31,5 +31,5 @@ ExitApp
 Show:
 	ToolTip, %Text1%, 500, 200
 	btt(Text2, 800, 200, 2)
-	btt(Text2, 500, 350,, "Style4")
+	btt(Text2, 500, 350,, "Style1")
 return

@@ -2,9 +2,12 @@
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 version:
-2021.03.02
+2021.03.03
 
 changelog:
+2021.03.03
+  文本色支持渐变。
+  增加 Style8 。
 2021.03.02
   细边框色支持渐变。
   增加 Style7 。
@@ -47,62 +50,75 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                    , BackgroundColor:0xaa3e3d45
                    , FontSize:14}
 
-       , Style3  := {Border:2
-                   , Rounded:0
-                   , TextColor:0xffF15839
-                   , BackgroundColor:0xffFCEDE6
-                   , FontSize:14}
+       , Style3 := {Border:2
+                  , Rounded:0
+                  , TextColor:0xffF15839
+                  , BackgroundColor:0xffFCEDE6
+                  , FontSize:14}
 
-       , Style4  := {Border:10
-                   , Rounded:20
-                   , BorderColor:0xff604a78
-                   , TextColor:0xffF3AE00
-                   , BackgroundColor:0xff6A537F
-                   , FontSize:20
-                   , FontStyle:"Bold Italic"}
+       , Style4 := {Border:10
+                  , Rounded:20
+                  , BorderColor:0xff604a78
+                  , TextColor:0xffF3AE00
+                  , BackgroundColor:0xff6A537F
+                  , FontSize:20
+                  , FontStyle:"Bold Italic"}
 
-       , Style5  := {Border:0
-                   , Rounded:5
-                   , TextColor:0xffeeeeee
-                   , BackgroundColorLinearGradientStart:0xff134E5E
-                   , BackgroundColorLinearGradientEnd:0xff326f69
-                   , BackgroundColorLinearGradientDirection:1}
+       , Style5 := {Border:0
+                  , Rounded:5
+                  , TextColor:0xffeeeeee
+                  , BackgroundColorLinearGradientStart:0xff134E5E
+                  , BackgroundColorLinearGradientEnd:0xff326f69
+                  , BackgroundColorLinearGradientDirection:1}
 
-       , Style6  := {Border:2
-                   , Rounded:5
-                   , TextColor:0xffCAE682
-                   , BackgroundColor:0xff434343
-                   , FontSize:14}
+       , Style6 := {Border:2
+                  , Rounded:5
+                  , TextColor:0xffCAE682
+                  , BackgroundColor:0xff434343
+                  , FontSize:14}
 
-       , Style7  := {Border:2
-                   , Rounded:30
-                   , Margin:30
-                   , BorderColorLinearGradientStart:0xffb7407c
-                   , BorderColorLinearGradientEnd:0xff3881a7
-                   , BorderColorLinearGradientDirection:3
-                   , TextColor:0xffd9d9db
-                   , BackgroundColor:0xff26293a}
+       , Style7 := {Border:20
+                  , Rounded:30
+                  , Margin:30
+                  , BorderColor:0xffaabbcc
+                  , TextColor:0xff112233
+                  , BackgroundColorLinearGradientStart:0xffF4CFC9
+                  , BackgroundColorLinearGradientEnd:0xff8DA5D3
+                  , BackgroundColorLinearGradientDirection:1
+                  , FontStyle:"BoldItalic"}
+
+       , Style8 := {Border:3
+                  , Rounded:30
+                  , Margin:30
+                  , BorderColorLinearGradientStart:0xffb7407c
+                  , BorderColorLinearGradientEnd:0xff3881a7
+                  , BorderColorLinearGradientDirection:3
+                  , TextColor:0xffd9d9db
+                  , BackgroundColor:0xff26293a}
 
        ; You can customize your own style.
        ; All supported parameters are listed below. All parameters can be omitted.
        ; Please share your custom style and include a screenshot. It will help a lot of people.
        ; Attention:
        ; Color => ARGB => Alpha Red Green Blue => 0x ff aa bb cc => 0xffaabbcc
-       , Style99 :=  {Border:20
-                    , Rounded:30
-                    , Margin:30
+       , Style99 :=  {Border:20                                      ; If omitted, 1 will be used. Range 0-20.
+                    , Rounded:30                                     ; If omitted, 3 will be used. Range 0-30.
+                    , Margin:30                                      ; If omitted, 5 will be used. Range 0-30.
                     , BorderColor:0xffaabbcc                         ; ARGB
                     , BorderColorLinearGradientStart:0xff8DA5D3      ; ARGB
                     , BorderColorLinearGradientEnd:0xffF4CFC9        ; ARGB
-                    , BorderColorLinearGradientDirection:1           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+                    , BorderColorLinearGradientDirection:5           ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
                     , TextColor:0xff112233                           ; ARGB
+                    , TextColorLinearGradientStart:0xff8DA5D3        ; ARGB
+                    , TextColorLinearGradientEnd:0xffF4CFC9          ; ARGB
+                    , TextColorLinearGradientDirection:3             ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
                     , BackgroundColor:0xff778899                     ; ARGB
                     , BackgroundColorLinearGradientStart:0xffF4CFC9  ; ARGB
                     , BackgroundColorLinearGradientEnd:0xff8DA5D3    ; ARGB
-                    , BackgroundColorLinearGradientDirection:1       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
+                    , BackgroundColorLinearGradientDirection:5       ; 1 = Horizontal   2、3、4 = Oblique   5 = Vertical
                     , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
-                    , FontSize:12
-                    , FontRender:5                                   ; 0-5 (recommended value is 5)
+                    , FontSize:12                                    ; If omitted, 12 will be used.
+                    , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
                     , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
 
        , Option99 := {TargetHWND:""                                  ; If omitted, active window will be used.
@@ -419,15 +435,30 @@ Class BeautifulToolTip
   _CheckStylesAndOptions(Styles, Options)
   {
       O := {}
-    , O.Border          := NonNull_Ret(Styles.Border         , 1                   , 0 , 20)  ; 细边框  	默认1 0-20
-    , O.Rounded         := NonNull_Ret(Styles.Rounded        , 3                   , 0 , 30)  ; 圆角    	默认3 0-30
-    , O.Margin          := NonNull_Ret(Styles.Margin         , 5                   , 0 , 30)  ; 边距    	默认5 0-30
-    , O.TextColor       := NonNull_Ret(Styles.TextColor      , 0xff575757          , "", "")  ; 文本色  	默认0xff575757
-    , O.BackgroundColor := NonNull_Ret(Styles.BackgroundColor, 0xffffffff          , "", "")  ; 背景色  	默认0xffffffff
-    , O.Font            := NonNull_Ret(Styles.Font           , this.ToolTipFontName, "", "")  ; 字体    	默认与 ToolTip 一致
-    , O.FontSize        := NonNull_Ret(Styles.FontSize       , 12                  , "", "")  ; 字号    	默认12
-    , O.FontRender      := NonNull_Ret(Styles.FontRender     , 5                   , 0 , 5 )  ; 渲染模式	默认5 0-5
-    , O.FontStyle       := Styles.FontStyle                                                   ; 字体样式	默认无
+    , O.Border          := NonNull_Ret(Styles.Border         , 1                   , 0 , 20)  ; 细边框    默认1 0-20
+    , O.Rounded         := NonNull_Ret(Styles.Rounded        , 3                   , 0 , 30)  ; 圆角      默认3 0-30
+    , O.Margin          := NonNull_Ret(Styles.Margin         , 5                   , 0 , 30)  ; 边距      默认5 0-30
+    , O.TextColor       := NonNull_Ret(Styles.TextColor      , 0xff575757          , "", "")  ; 文本色    默认0xff575757
+    , O.BackgroundColor := NonNull_Ret(Styles.BackgroundColor, 0xffffffff          , "", "")  ; 背景色    默认0xffffffff
+    , O.Font            := NonNull_Ret(Styles.Font           , this.ToolTipFontName, "", "")  ; 字体      默认与 ToolTip 一致
+    , O.FontSize        := NonNull_Ret(Styles.FontSize       , 12                  , "", "")  ; 字号      默认12
+    , O.FontRender      := NonNull_Ret(Styles.FontRender     , 5                   , 0 , 5 )  ; 渲染模式  默认5 0-5
+    , O.FontStyle       := Styles.FontStyle                                                   ; 字体样式  默认无
+
+    ; 名字太长，建个缩写副本。
+    , O.BCLGS  := Styles.BorderColorLinearGradientStart                                       ; 细边框渐变色		  默认无
+    , O.BCLGE  := Styles.BorderColorLinearGradientEnd                                         ; 细边框渐变色		  默认无
+    , O.BCLGD  := NonNull_Ret(Styles.BorderColorLinearGradientDirection, "", 1 , 5)           ; 细边框渐变方向	  默认无 1-5
+
+    ; 名字太长，建个缩写副本。
+    , O.TCLGS  := Styles.TextColorLinearGradientStart                                         ; 文本渐变色		    默认无
+    , O.TCLGE  := Styles.TextColorLinearGradientEnd                                           ; 文本渐变色		    默认无
+    , O.TCLGD  := NonNull_Ret(Styles.TextColorLinearGradientDirection, "", 1 , 5)             ; 文本渐变方向	    默认无 1-5
+
+    ; 名字太长，建个缩写副本。
+    , O.BGCLGS := Styles.BackgroundColorLinearGradientStart                                   ; 背景渐变色		    默认无
+    , O.BGCLGE := Styles.BackgroundColorLinearGradientEnd                                     ; 背景渐变色		    默认无
+    , O.BGCLGD := NonNull_Ret(Styles.BackgroundColorLinearGradientDirection, "", 1 , 5)       ; 背景渐变方向	    默认无 1-5
 
     ; a:=0xaabbccdd 下面是运算规则
     ; a>>16    = 0xaabb
@@ -436,32 +467,24 @@ Class BeautifulToolTip
     ; a&0xff   = 0xdd
     ; 0x88<<16 = 0x880000
     ; 0x880000+0xbbcc = 0x88bbcc
-    , BlendedColor      := ((O.BackgroundColor>>24)<<24) + (O.TextColor&0xffffff)             ; 混合色		背景色的透明度与文本色混合
-    , O.BorderColor     := NonNull_Ret(Styles.BorderColor    , BlendedColor        , "", "")  ; 细边框色	默认混合色
+    , BlendedColor2 := (O.TCLGS and O.TCLGE and O.TCLGD) ? O.TCLGS : O.TextColor              ; 使用文本渐变色替换文本色用于混合
+    , BlendedColor  := ((O.BackgroundColor>>24)<<24) + (BlendedColor2&0xffffff)               ; 混合色    背景色的透明度与文本色混合
+    , O.BorderColor := NonNull_Ret(Styles.BorderColor , BlendedColor      , "", "")           ; 细边框色  默认混合色
 
-    ; 名字太长，建个缩写副本。
-    , O.BCLGS := Styles.BorderColorLinearGradientStart                                        ; 细边框渐变色		默认无
-    , O.BCLGE := Styles.BorderColorLinearGradientEnd                                          ; 细边框渐变色		默认无
-    , O.BCLGD := NonNull_Ret(Styles.BorderColorLinearGradientDirection, "", 1 , 5)            ; 细边框渐变方向	默认无 1-5
-
-    ; 名字太长，建个缩写副本。
-    , O.BGCLGS := Styles.BackgroundColorLinearGradientStart                                   ; 背景渐变色		默认无
-    , O.BGCLGE := Styles.BackgroundColorLinearGradientEnd                                     ; 背景渐变色		默认无
-    , O.BGCLGD := NonNull_Ret(Styles.BackgroundColorLinearGradientDirection, "", 1 , 5)       ; 背景渐变方向	默认无 1-5
-
-    , O.TargetHWND  := NonNull_Ret(Options.TargetHWND , WinExist("A")     , "", "")           ; 目标句柄		默认活动窗口
-    , O.CoordMode   := NonNull_Ret(Options.CoordMode  , A_CoordModeToolTip, "", "")           ; 坐标模式		默认与 ToolTip 一致
-    , O.Transparent := NonNull_Ret(Options.Transparent, 255               , 0 , 255)          ; 整体透明度	默认255
-    , O.MouseNeverCoverToolTip          := NonNull_Ret(Options.MouseNeverCoverToolTip         , 1 , 0 , 1 ) ; 鼠标永不遮挡文本框
-    , O.DistanceBetweenMouseXAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseXAndToolTip, 16, "", "") ; 鼠标与文本框的X距离
-    , O.DistanceBetweenMouseYAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseYAndToolTip, 16, "", "") ; 鼠标与文本框的Y距离
+    , O.TargetHWND  := NonNull_Ret(Options.TargetHWND , WinExist("A")     , "", "")           ; 目标句柄		      默认活动窗口
+    , O.CoordMode   := NonNull_Ret(Options.CoordMode  , A_CoordModeToolTip, "", "")           ; 坐标模式		      默认与 ToolTip 一致
+    , O.Transparent := NonNull_Ret(Options.Transparent, 255               , 0 , 255)          ; 整体透明度	      默认255
+    , O.MouseNeverCoverToolTip          := NonNull_Ret(Options.MouseNeverCoverToolTip         , 1 , 0 , 1 )   ; 鼠标永不遮挡文本框
+    , O.DistanceBetweenMouseXAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseXAndToolTip, 16, "", "")   ; 鼠标与文本框的X距离
+    , O.DistanceBetweenMouseYAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseYAndToolTip, 16, "", "")   ; 鼠标与文本框的Y距离
 
     ; 难以比对两个对象是否一致，所以造一个变量比对。
     ; 这里的校验因素，必须是那些改变后会使画面内容也产生变化的因素。
     ; 所以没有 TargetHWND 和 CoordMode 和 Transparent ，因为这三个因素只影响位置。
-    , O.Checksum := Format("{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}"
-                         , O.Border, O.Rounded, O.Margin, O.BorderColor
-                         , O.BCLGS, O.BCLGE, O.BCLGD, O.TextColor
+    , O.Checksum := Format("{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19}"
+                         , O.Border, O.Rounded, O.Margin
+                         , O.BorderColor, O.BCLGS, O.BCLGE, O.BCLGD
+                         , O.TextColor, O.TCLGS, O.TCLGE, O.TCLGD
                          , O.BackgroundColor, O.BGCLGS, O.BGCLGE, O.BGCLGD
                          , O.Font, O.FontSize, O.FontRender, O.FontStyle)
     return, O
@@ -648,8 +671,25 @@ Gdip_TextToGraphics2(pGraphics, Text, Options, Measure:=0)
 	; if !hStringFormat
 		hStringFormat := Gdip_StringFormatGetGeneric(1)
 
-  ; 设置文字颜色
-	pBrush := Gdip_BrushCreateSolid(Options.TextColor)
+  ; 准备文本画刷
+  if (Options.TCLGD and Options.TCLGS and Options.TCLGE and Options.Width and Options.Height)   ; 渐变画刷
+  {
+      Left   := NonNull_Ret(Options.X, 0)
+    , Top    := NonNull_Ret(Options.Y, 0)
+    , Right  := Left + Options.Width
+    , Bottom := Top  + Options.Height
+    switch, Options.TCLGD
+    {
+      ; Options.TCLGD 1是横向渐变，2、3、4是左上角到右下角斜向渐变，5是垂直渐变。
+      case, "1": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Top,       Options.TCLGS, Options.TCLGE)
+      case, "2": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Bottom//2, Options.TCLGS, Options.TCLGE)
+      case, "3": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right,    Bottom,    Options.TCLGS, Options.TCLGE)
+      case, "4": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Right//2, Bottom,    Options.TCLGS, Options.TCLGE)
+      case, "5": pBrush:=Gdip_CreateLinearGrBrush(Left, Top, Left,     Bottom,    Options.TCLGS, Options.TCLGE)
+    }
+  }
+  else
+    pBrush := Gdip_BrushCreateSolid(Options.TextColor)                                          ; 纯色画刷
 
 	; 检查参数是否齐全
 	if !(hFontFamily && hFont && hStringFormat && pBrush && pGraphics)
