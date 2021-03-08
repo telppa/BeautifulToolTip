@@ -24,15 +24,18 @@ Template :=  {Border:20                                      ; If omitted, 1 wil
 					  , BorderColor:0xffaabbcc                         ; ARGB
 					  , BorderColorLinearGradientStart:0xff16a085      ; ARGB
 					  , BorderColorLinearGradientEnd:0xfff4d03f        ; ARGB
-					  , BorderColorLinearGradientDirection:3           ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+					  , BorderColorLinearGradientAngle:45              ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
+					  , BorderColorLinearGradientMode:1                ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
 					  , TextColor:0xff112233                           ; ARGB
 					  , TextColorLinearGradientStart:0xff00416a        ; ARGB
 					  , TextColorLinearGradientEnd:0xffe4e5e6          ; ARGB
-					  , TextColorLinearGradientDirection:5             ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+					  , TextColorLinearGradientAngle:90                ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
+					  , TextColorLinearGradientMode:1                  ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
 					  , BackgroundColor:0xff778899                     ; ARGB
 					  , BackgroundColorLinearGradientStart:0xff8DA5D3  ; ARGB
 					  , BackgroundColorLinearGradientEnd:0xffF4CFC9    ; ARGB
-					  , BackgroundColorLinearGradientDirection:7       ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+					  , BackgroundColorLinearGradientAngle:135         ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
+					  , BackgroundColorLinearGradientMode:1            ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
 					  , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
 					  , FontSize:20                                    ; If omitted, 12 will be used.
 					  , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
@@ -46,7 +49,8 @@ OwnStyle1 := {Border:20
 					  , TextColor:0xff112233
 					  , BackgroundColorLinearGradientStart:0xffF4CFC9
 					  , BackgroundColorLinearGradientEnd:0xff8DA5D3
-					  , BackgroundColorLinearGradientDirection:1
+					  , BackgroundColorLinearGradientAngle:0
+					  , BackgroundColorLinearGradientMode:8
 					  , FontStyle:"BoldItalic Underline"}
 
 ; Same as Style8
@@ -55,7 +59,8 @@ OwnStyle2 := {Border:3
 						, Margin:30
 						, BorderColorLinearGradientStart:0xffb7407c
 						, BorderColorLinearGradientEnd:0xff3881a7
-						, BorderColorLinearGradientDirection:3
+						, BorderColorLinearGradientAngle:45
+						, BorderColorLinearGradientMode:6
 						, TextColor:0xffd9d9db
 						, BackgroundColor:0xff26293a}
 
@@ -63,7 +68,8 @@ OwnStyle2 := {Border:3
 OwnStyle3 := {BorderColor:0x00ffffff
 						, TextColorLinearGradientStart:0xff00b4db
 						, TextColorLinearGradientEnd:0xff004360
-						, TextColorLinearGradientDirection:1
+						, TextColorLinearGradientAngle:0
+						, TextColorLinearGradientMode:1
 						, BackgroundColor:0x00ffffff
 						, FontSize:16
 						, FontRender:4

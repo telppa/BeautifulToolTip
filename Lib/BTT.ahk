@@ -4,17 +4,23 @@ https://github.com/telppa/BeautifulToolTip
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 version:
-2021.03.03
+2021.03.07
 
 changelog:
+2021.03.07
+  增加 4 种渐变模式。
+2021.03.05
+  删除渐变方向参数。
+  增加渐变角度参数，支持 360° 渐变。
+  增加渐变模式参数，支持 4 种模式。
 2021.03.03
   文本色支持渐变。
   增加 Style8 。
-  增加3个渐变方向。
+  增加 3 个渐变方向。
 2021.03.02
   细边框色支持渐变。
   增加 Style7 。
-  增加2个渐变方向。
+  增加 2 个渐变方向。
 2021.03.01
   BTT 的总在最上级别现在跟 ToolTip 一样高了。
   解决 BTT 被不明原因置底导致误以为没显示的问题。
@@ -54,15 +60,18 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                     , BorderColor:0xffaabbcc                         ; ARGB
                     , BorderColorLinearGradientStart:0xff16a085      ; ARGB
                     , BorderColorLinearGradientEnd:0xfff4d03f        ; ARGB
-                    , BorderColorLinearGradientDirection:3           ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+                    , BorderColorLinearGradientAngle:45              ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
+                    , BorderColorLinearGradientMode:1                ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
                     , TextColor:0xff112233                           ; ARGB
                     , TextColorLinearGradientStart:0xff00416a        ; ARGB
                     , TextColorLinearGradientEnd:0xffe4e5e6          ; ARGB
-                    , TextColorLinearGradientDirection:5             ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+                    , TextColorLinearGradientAngle:90                ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
+                    , TextColorLinearGradientMode:1                  ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
                     , BackgroundColor:0xff778899                     ; ARGB
                     , BackgroundColorLinearGradientStart:0xff8DA5D3  ; ARGB
                     , BackgroundColorLinearGradientEnd:0xffF4CFC9    ; ARGB
-                    , BackgroundColorLinearGradientDirection:7       ; 1=Horizontal  2|3|4=Oblique  5=Vertical  6|7|8=Oblique(R to L)
+                    , BackgroundColorLinearGradientAngle:135         ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
+                    , BackgroundColorLinearGradientMode:1            ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
                     , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
                     , FontSize:20                                    ; If omitted, 12 will be used.
                     , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
@@ -104,7 +113,8 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                   , TextColor:0xffeeeeee
                   , BackgroundColorLinearGradientStart:0xff134E5E
                   , BackgroundColorLinearGradientEnd:0xff326f69
-                  , BackgroundColorLinearGradientDirection:1}
+                  , BackgroundColorLinearGradientAngle:0
+                  , BackgroundColorLinearGradientMode:1}
 
        , Style6 := {Border:2
                   , Rounded:5
@@ -119,7 +129,8 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                   , TextColor:0xff112233
                   , BackgroundColorLinearGradientStart:0xffF4CFC9
                   , BackgroundColorLinearGradientEnd:0xff8DA5D3
-                  , BackgroundColorLinearGradientDirection:1
+                  , BackgroundColorLinearGradientAngle:0
+                  , BackgroundColorLinearGradientMode:1
                   , FontStyle:"BoldItalic"}
 
        , Style8 := {Border:3
@@ -127,7 +138,8 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                   , Margin:30
                   , BorderColorLinearGradientStart:0xffb7407c
                   , BorderColorLinearGradientEnd:0xff3881a7
-                  , BorderColorLinearGradientDirection:3
+                  , BorderColorLinearGradientAngle:45
+                  , BorderColorLinearGradientMode:1
                   , TextColor:0xffd9d9db
                   , BackgroundColor:0xff26293a}
 
@@ -281,11 +293,9 @@ Class BeautifulToolTip
       Gdip_GraphicsClear(this["G" WhichToolTip])
 
       ; 准备细边框画刷
-      if (O.BCLGD and O.BCLGS and O.BCLGE)                                    ; 渐变画刷 画细边框
-      {
-        Left:=0, Top:=0, Right:=Left+RectWithBorderWidth, Bottom:=Top+RectWithBorderHeight
-        pBrushBorder := this._CreateLinearGrBrush(O.BCLGD, O.BCLGS, O.BCLGE, Left, Top, Right, Bottom)
-      }
+      if (O.BCLGA!="" and O.BCLGM and O.BCLGS and O.BCLGE)                    ; 渐变画刷 画细边框
+        pBrushBorder := this._CreateLinearGrBrush(O.BCLGA, O.BCLGM, O.BCLGS, O.BCLGE
+                                                , 0, 0, RectWithBorderWidth, RectWithBorderHeight)
       else
         pBrushBorder := Gdip_BrushCreateSolid(O.BorderColor)                  ; 纯色画刷 画细边框
 
@@ -300,11 +310,9 @@ Class BeautifulToolTip
         }
 
       ; 准备文本框画刷
-      if (O.BGCLGD and O.BGCLGS and O.BGCLGE)                                 ; 渐变画刷 画文本框
-      {
-        Left:=O.Border, Top:=O.Border, Right:=Left+RectWidth, Bottom:=Top+RectHeight
-        pBrushBackground := this._CreateLinearGrBrush(O.BGCLGD, O.BGCLGS, O.BGCLGE, Left, Top, Right, Bottom)
-      }
+      if (O.BGCLGA!="" and O.BGCLGM and O.BGCLGS and O.BGCLGE)                ; 渐变画刷 画文本框
+        pBrushBackground := this._CreateLinearGrBrush(O.BGCLGA, O.BGCLGM, O.BGCLGS, O.BGCLGE
+                                                    , O.Border, O.Border, RectWidth, RectHeight)
       else
         pBrushBackground := Gdip_BrushCreateSolid(O.BackgroundColor)          ; 纯色画刷 画文本框
 
@@ -446,16 +454,15 @@ Class BeautifulToolTip
       hStringFormat := Gdip_StringFormatGetGeneric(1)
 
     ; 准备文本画刷
-    if (Options.TCLGD and Options.TCLGS and Options.TCLGE and Options.Width and Options.Height)   ; 渐变画刷
+    if (Options.TCLGA!="" and Options.TCLGM and Options.TCLGS and Options.TCLGE
+        and Options.Width and Options.Height)             ; 渐变画刷
     {
-        Left   := NonNull_Ret(Options.X, 0)
-      , Top    := NonNull_Ret(Options.Y, 0)
-      , Right  := Left + Options.Width
-      , Bottom := Top  + Options.Height
-      pBrush := this._CreateLinearGrBrush(Options.TCLGD, Options.TCLGS, Options.TCLGE, Left, Top, Right, Bottom)
+      pBrush := this._CreateLinearGrBrush(Options.TCLGA, Options.TCLGM, Options.TCLGS, Options.TCLGE
+                                        , NonNull_Ret(Options.X, 0), NonNull_Ret(Options.Y, 0)
+                                        , Options.Width, Options.Height)
     }
     else
-      pBrush := Gdip_BrushCreateSolid(Options.TextColor)                                          ; 纯色画刷
+      pBrush := Gdip_BrushCreateSolid(Options.TextColor)  ; 纯色画刷
 
     ; 检查参数是否齐全
     if !(hFontFamily && hFont && hStringFormat && pBrush && pGraphics)
@@ -490,21 +497,22 @@ Class BeautifulToolTip
     return _E ? _E : returnRC
   }
 
-  _CreateLinearGrBrush(Direction, StartColor, EndColor, Left, Top, Right, Bottom)
+  _CreateLinearGrBrush(Angle, Mode, StartColor, EndColor, x, y, w, h)
   {
-    switch, Direction
+    ; Mode=8 Angle 0=左到右 90=上到下 180=右到左 270=下到上
+    ; Mode=3 Angle 0=左到右 90=近似上到下
+    ; Mode=4 Angle 0=左到右 90=下到上
+    switch, Mode
     {
-      ; Direction 1是横向渐变，2、3、4是左上角到右下角斜向渐变，5是垂直渐变，6、7、8是右上角到左下角斜向渐变。
-      ; 因为 Border 比背景细很多，所以斜向渐变终点需使用横坐标的1/2，这样斜向渐变才能更加明显。
-      ; 也是因为上述原因，将斜向扩充为 2、3、4 6、7、8 共6种。
-      case, "1": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right   , Top      , StartColor, EndColor)
-      case, "2": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right   , Bottom//2, StartColor, EndColor)
-      case, "3": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right   , Bottom   , StartColor, EndColor)
-      case, "4": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Right//2, Bottom   , StartColor, EndColor)
-      case, "5": pBrush:=Gdip_CreateLinearGrBrush(Left,  Top, Left    , Bottom   , StartColor, EndColor)
-      case, "6": pBrush:=Gdip_CreateLinearGrBrush(Right, Top, Right//2, Bottom   , StartColor, EndColor)
-      case, "7": pBrush:=Gdip_CreateLinearGrBrush(Right, Top, Left    , Bottom   , StartColor, EndColor)
-      case, "8": pBrush:=Gdip_CreateLinearGrBrush(Right, Top, Left    , Bottom//2, StartColor, EndColor)
+      case, 1,3,5,7:pBrush:=Gdip_CreateLinearGrBrush(x, y, x+w, y, StartColor, EndColor)
+      case, 2,4,6,8:pBrush:=Gdip_CreateLinearGrBrush(x, y+h//2, x+w, y+h//2, StartColor, EndColor)
+    }
+    switch, Mode
+    {
+      case, 1,2: Gdip_RotateLinearGrBrushTransform(pBrush, Angle, 0)  ; 性能比模式3、4高10倍左右
+      case, 3,4: Gdip_RotateLinearGrBrushTransform(pBrush, Angle, 1)
+      case, 5,6: Gdip_RotateLinearGrBrushAtCenter(pBrush, Angle, 0)
+      case, 7,8: Gdip_RotateLinearGrBrushAtCenter(pBrush, Angle, 1)   ; 可绕中心旋转
     }
     return, pBrush
   }
@@ -526,17 +534,20 @@ Class BeautifulToolTip
     ; 名字太长，建个缩写副本。
     , O.BCLGS  := Styles.BorderColorLinearGradientStart                                       ; 细边框渐变色		  默认无
     , O.BCLGE  := Styles.BorderColorLinearGradientEnd                                         ; 细边框渐变色		  默认无
-    , O.BCLGD  := NonNull_Ret(Styles.BorderColorLinearGradientDirection, "", 1 , 8)           ; 细边框渐变方向	  默认无 1-8
+    , O.BCLGA  := Styles.BorderColorLinearGradientAngle                                       ; 细边框渐变角度	  默认无
+    , O.BCLGM  := NonNull_Ret(Styles.BorderColorLinearGradientMode, "", 1, 8)                 ; 细边框渐变模式	  默认无 1-8
 
     ; 名字太长，建个缩写副本。
     , O.TCLGS  := Styles.TextColorLinearGradientStart                                         ; 文本渐变色		    默认无
     , O.TCLGE  := Styles.TextColorLinearGradientEnd                                           ; 文本渐变色		    默认无
-    , O.TCLGD  := NonNull_Ret(Styles.TextColorLinearGradientDirection, "", 1 , 8)             ; 文本渐变方向	    默认无 1-8
+    , O.TCLGA  := Styles.TextColorLinearGradientAngle                                         ; 文本渐变角度	    默认无
+    , O.TCLGM  := NonNull_Ret(Styles.TextColorLinearGradientMode, "", 1, 8)                   ; 文本渐变模式	    默认无 1-8
 
     ; 名字太长，建个缩写副本。
     , O.BGCLGS := Styles.BackgroundColorLinearGradientStart                                   ; 背景渐变色		    默认无
     , O.BGCLGE := Styles.BackgroundColorLinearGradientEnd                                     ; 背景渐变色		    默认无
-    , O.BGCLGD := NonNull_Ret(Styles.BackgroundColorLinearGradientDirection, "", 1 , 8)       ; 背景渐变方向	    默认无 1-8
+    , O.BGCLGA := Styles.BackgroundColorLinearGradientAngle                                   ; 背景渐变角度	    默认无
+    , O.BGCLGM := NonNull_Ret(Styles.BackgroundColorLinearGradientMode, "", 1, 8)             ; 背景渐变模式	    默认无 1-8
 
     ; a:=0xaabbccdd 下面是运算规则
     ; a>>16    = 0xaabb
@@ -559,12 +570,11 @@ Class BeautifulToolTip
     ; 难以比对两个对象是否一致，所以造一个变量比对。
     ; 这里的校验因素，必须是那些改变后会使画面内容也产生变化的因素。
     ; 所以没有 TargetHWND 和 CoordMode 和 Transparent ，因为这三个因素只影响位置。
-    , O.Checksum := Format("{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19}"
-                         , O.Border, O.Rounded, O.Margin
-                         , O.BorderColor, O.BCLGS, O.BCLGE, O.BCLGD
-                         , O.TextColor, O.TCLGS, O.TCLGE, O.TCLGD
-                         , O.BackgroundColor, O.BGCLGS, O.BGCLGE, O.BGCLGD
-                         , O.Font, O.FontSize, O.FontRender, O.FontStyle)
+    O.Checksum := O.Border          "|" O.Rounded  "|" O.Margin     "|"
+                . O.BorderColor     "|" O.BCLGS    "|" O.BCLGE      "|" O.BCLGA     "|" O.BCLGM  "|"
+                . O.TextColor       "|" O.TCLGS    "|" O.TCLGE      "|" O.TCLGA     "|" O.TCLGM  "|"
+                . O.BackgroundColor "|" O.BGCLGS   "|" O.BGCLGE     "|" O.BGCLGA    "|" O.BGCLGM "|"
+                . O.Font            "|" O.FontSize "|" O.FontRender "|" O.FontStyle
     return, O
   }
 
