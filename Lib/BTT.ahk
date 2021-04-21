@@ -4,9 +4,13 @@ https://github.com/telppa/BeautifulToolTip
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 version:
-2021.03.07
+2021.04.20
 
 changelog:
+2021.04.20
+  支持根据显示器 DPI 缩放比例自动缩放，与 ToolTip 特性保持一致。
+  支持直接使用未安装的本地字体。
+  Options 增加 JustCalculateSize 参数，可在不绘制内容的前提下直接返回尺寸。
 2021.03.07
   增加 4 种渐变模式。
 2021.03.05
@@ -27,9 +31,15 @@ changelog:
   增加 Style6 。
   文字显示更加居中。
 2021.02.22
-  增加返回值与 Transparent 参数。
+  增加返回值。
+  Options 增加 Transparent 参数，可直接设置整体透明度。
 
 todo:
+tabstop
+指定高宽
+文字可获取
+降低内存消耗
+阴影
 ANSI版本的支持
 文字太多导致没有显示完全的情况下给予明显提示（例如闪烁）
 
@@ -38,8 +48,8 @@ ANSI版本的支持
 *高兼容				  兼容内置 ToolTip 的一切，包括语法、WhichToolTip、A_CoordModeToolTip、自动换行等等
 *简单易用				一行代码即使用 无需手动创建释放资源
 *多套内置风格		可通过模板快速实现自定义风格
-*可自定义风格		细边框（颜色、大小） 圆角 边距 文字（颜色、字体、字号、渲染方式、样式） 背景色 所有颜色支持渐变与透明 支持8个渐变方向
-*可自定义参数		跟随鼠标距离 文本框永不被遮挡 贴附目标句柄 坐标模式
+*可自定义风格		细边框（颜色、大小） 圆角 边距 文字（颜色、字体、字号、渲染方式、样式） 背景色 所有颜色支持360°渐变与透明
+*可自定义参数		贴附目标句柄 坐标模式 整体透明度 文本框永不被遮挡 跟随鼠标距离 不绘制内容直接返回尺寸
 *不闪烁不乱跳
 *多显示器支持
 *缩放显示支持
@@ -72,7 +82,7 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                     , BackgroundColorLinearGradientEnd:0xffF4CFC9    ; ARGB
                     , BackgroundColorLinearGradientAngle:135         ; Mode=8 Angle 0(L to R) 90(U to D) 180(R to L) 270(D to U)
                     , BackgroundColorLinearGradientMode:1            ; Mode=4 Angle 0(L to R) 90(D to U), Range 1-8.
-                    , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used.
+                    , Font:"Font Name"                               ; If omitted, ToolTip's Font will be used. Can specify the font file path.
                     , FontSize:20                                    ; If omitted, 12 will be used.
                     , FontRender:5                                   ; If omitted, 5 will be used. Range 0-5.
                     , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
@@ -82,7 +92,8 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                     , Transparent:""                                 ; If omitted, 255 will be used.
                     , MouseNeverCoverToolTip:""                      ; If omitted, 1 will be used.
                     , DistanceBetweenMouseXAndToolTip:""             ; If omitted, 16 will be used. This value can be negative.
-                    , DistanceBetweenMouseYAndToolTip:""}            ; If omitted, 16 will be used. This value can be negative.
+                    , DistanceBetweenMouseYAndToolTip:""             ; If omitted, 16 will be used. This value can be negative.
+                    , JustCalculateSize:""}                          ; Set to 1, no content will be displayed, just calculate size and return.
 
        , Style1 := {TextColor:0xffeef8f6
                   , BackgroundColor:0xff1b8dff
@@ -170,8 +181,8 @@ Class BeautifulToolTip
       SavedBatchLines:=A_BatchLines
       SetBatchLines, -1
 
-      ; Start gdi+
-      this.pToken := Gdip_Startup()
+      ; 多实例启动 gdi+ 。避免有些人修改内部代码时与他自己的 gdi+ 冲突。
+      this.pToken := Gdip_Startup(1)
       if (!this.pToken)
       {
         MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
@@ -180,6 +191,21 @@ Class BeautifulToolTip
 
       ; 多显示器支持
       this.Monitors := MDMF_Enum()
+      ; 获取多显示器各自 DPI 缩放比例
+      for hMonitor, v in this.Monitors.Clone()
+      {
+        if (hMonitor="TotalCount" or hMonitor="Primary")
+          continue
+        ; https://github.com/Ixiko/AHK-libs-and-classes-collection/blob/e421acb801867edb659a54b7473e6e617f2b267b/libs/g-n/Monitor.ahk
+        ; ahk 源码里 A_ScreenDPI 就是只获取了 dpiX ，所以这里保持一致
+        if (DllCall("Shcore.dll\GetDpiForMonitor", "Ptr", hMonitor, "Int", Type, "UIntP", dpiX, "UIntP", dpiY, "UInt")!=0)
+        {
+          hDC  := DllCall("Gdi32.dll\CreateDC", "Str", hMonitor.name, "Ptr", 0, "Ptr", 0, "Ptr", 0, "Ptr")
+          dpiX := DllCall("Gdi32.dll\GetDeviceCaps", "Ptr", hDC, "Int", 88)    ; LOGPIXELSX = 88
+          DllCall("Gdi32.dll\DeleteDC", "Ptr", hDC)
+        }
+        this.Monitors[hMonitor].DPIScale := NonNull_Ret(dpiX, A_ScreenDPI)/96
+      }
 
       ; 获取整个桌面的分辨率，即使跨显示器
       SysGet, VirtualWidth, 78
@@ -289,92 +315,95 @@ Class BeautifulToolTip
       ; 圆角超过矩形宽或高的一半时，会画出畸形的圆，所以这里验证并限制一下。
       , R:=(O.Rounded>Min(RectWidth, RectHeight)//2) ? Min(RectWidth, RectHeight)//2 : O.Rounded
 
-      ; 画之前务必清空画布，否则会出现异常。
-      Gdip_GraphicsClear(this["G" WhichToolTip])
+      if (O.JustCalculateSize!=1)
+      {
+        ; 画之前务必清空画布，否则会出现异常。
+        Gdip_GraphicsClear(this["G" WhichToolTip])
 
-      ; 准备细边框画刷
-      if (O.BCLGA!="" and O.BCLGM and O.BCLGS and O.BCLGE)                    ; 渐变画刷 画细边框
-        pBrushBorder := this._CreateLinearGrBrush(O.BCLGA, O.BCLGM, O.BCLGS, O.BCLGE
-                                                , 0, 0, RectWithBorderWidth, RectWithBorderHeight)
-      else
-        pBrushBorder := Gdip_BrushCreateSolid(O.BorderColor)                  ; 纯色画刷 画细边框
+        ; 准备细边框画刷
+        if (O.BCLGA!="" and O.BCLGM and O.BCLGS and O.BCLGE)                    ; 渐变画刷 画细边框
+          pBrushBorder := this._CreateLinearGrBrush(O.BCLGA, O.BCLGM, O.BCLGS, O.BCLGE
+                                                  , 0, 0, RectWithBorderWidth, RectWithBorderHeight)
+        else
+          pBrushBorder := Gdip_BrushCreateSolid(O.BorderColor)                  ; 纯色画刷 画细边框
 
-      if (O.Border>0)
+        if (O.Border>0)
+          switch, R
+          {
+            ; 圆角为0则使用矩形画。不单独处理，会画出显示异常的图案。
+            case, "0": Gdip_FillRectangle(this["G" WhichToolTip]                ; 矩形细边框
+            , pBrushBorder, 0, 0, RectWithBorderWidth, RectWithBorderHeight)
+            Default  : Gdip_FillRoundedRectanglePath(this["G" WhichToolTip]     ; 圆角细边框
+            , pBrushBorder, 0, 0, RectWithBorderWidth, RectWithBorderHeight, R)
+          }
+
+        ; 准备文本框画刷
+        if (O.BGCLGA!="" and O.BGCLGM and O.BGCLGS and O.BGCLGE)                ; 渐变画刷 画文本框
+          pBrushBackground := this._CreateLinearGrBrush(O.BGCLGA, O.BGCLGM, O.BGCLGS, O.BGCLGE
+                                                      , O.Border, O.Border, RectWidth, RectHeight)
+        else
+          pBrushBackground := Gdip_BrushCreateSolid(O.BackgroundColor)          ; 纯色画刷 画文本框
+
         switch, R
         {
-          ; 圆角为0则使用矩形画。不单独处理，会画出显示异常的图案。
-          case, "0": Gdip_FillRectangle(this["G" WhichToolTip]                ; 矩形细边框
-          , pBrushBorder, 0, 0, RectWithBorderWidth, RectWithBorderHeight)
-          Default  : Gdip_FillRoundedRectanglePath(this["G" WhichToolTip]     ; 圆角细边框
-          , pBrushBorder, 0, 0, RectWithBorderWidth, RectWithBorderHeight, R)
+          case, "0": Gdip_FillRectangle(this["G" WhichToolTip]                  ; 矩形文本框
+          , pBrushBackground, O.Border, O.Border, RectWidth, RectHeight)
+          Default  : Gdip_FillRoundedRectanglePath(this["G" WhichToolTip]       ; 圆角文本框
+          , pBrushBackground, O.Border, O.Border, RectWidth, RectHeight
+          , (R>O.Border) ? R-O.Border : R)                                      ; 确保内外圆弧看起来同心
         }
 
-      ; 准备文本框画刷
-      if (O.BGCLGA!="" and O.BGCLGM and O.BGCLGS and O.BGCLGE)                ; 渐变画刷 画文本框
-        pBrushBackground := this._CreateLinearGrBrush(O.BGCLGA, O.BGCLGM, O.BGCLGS, O.BGCLGE
-                                                    , O.Border, O.Border, RectWidth, RectHeight)
-      else
-        pBrushBackground := Gdip_BrushCreateSolid(O.BackgroundColor)          ; 纯色画刷 画文本框
+        ; 清理画刷
+        Gdip_DeleteBrush(pBrushBorder)
+        Gdip_DeleteBrush(pBrushBackground)
 
-      switch, R
-      {
-        case, "0": Gdip_FillRectangle(this["G" WhichToolTip]                  ; 矩形文本框
-        , pBrushBackground, O.Border, O.Border, RectWidth, RectHeight)
-        Default  : Gdip_FillRoundedRectanglePath(this["G" WhichToolTip]       ; 圆角文本框
-        , pBrushBackground, O.Border, O.Border, RectWidth, RectHeight
-        , (R>O.Border) ? R-O.Border : R)                                      ; 确保内外圆弧看起来同心
+        ; 计算居中显示坐标。由于 TextArea 返回的文字范围右边有很多空白，所以这里的居中坐标并不精确。
+        O.X:=O.Border+O.Margin, O.Y:=O.Border+O.Margin, O.Width:=TextWidth, O.Height:=TextHeight
+
+        ; 如果显示区域过小，文字无法完全显示，则将待显示文本最后4个字符替换为4个英文省略号，表示显示不完全。
+        ; 虽然有 GdipSetStringFormatTrimming 函数可以设置末尾显示省略号，但它偶尔需要增加额外的宽度才能显示出来。
+        ; 由于难以判断是否需要增加额外宽度，以及需要增加多少等等问题，所以直接用这种方式自己实现省略号的显示。
+        ; 之所以选择替换最后4个字符，是因为一般替换掉最后2个字符，才能确保至少一个省略号显示出来。
+        ; 为了应对意外情况，以及让省略号更加明显一点，所以选择替换最后4个。
+        ; 原始的 Text 需要用于显示前的比对，所以不能改原始值，必须用 TempText 。
+        if (TextArea[5]<StrLen(Text))
+          TempText:=TextArea[5]>4 ? SubStr(Text, 1 ,TextArea[5]-4) "…………" : SubStr(Text, 1 ,1) "…………"
+        else
+          TempText:=Text
+
+        ; 写字到框上。这个函数使用 O 中的 X,Y 去调整文字的位置。
+        this._TextToGraphics(this["G" WhichToolTip], TempText, O)
+
+        ; 调试用，可显示计算得到的文字范围。
+        if (this.DebugMode)
+        {
+          pBrush := Gdip_BrushCreateSolid(0x20ff0000)
+          Gdip_FillRectangle(this["G" WhichToolTip], pBrush, O.Border+O.Margin, O.Border+O.Margin, TextWidth, TextHeight)
+          Gdip_DeleteBrush(pBrush)
+        }
+
+        ; 返回文本框不超出目标范围（比如屏幕范围）的最佳坐标。
+        this._CalculateDisplayPosition(X, Y, RectWithBorderWidth, RectWithBorderHeight, O)
+
+        ; 显示
+        UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip]
+                          , X, Y, RectWithBorderWidth, RectWithBorderHeight, O.Transparent)
+
+        ; 因为 BTT 总会在使用一段时间后，被不明原因的置底，导致显示内容被其它窗口遮挡，以为没有正常显示，所以这里提升Z序到最上面！
+        ; 已测试过，此方法效率极高，远超 WinSet, Top 命令。
+        ; hWndInsertAfter
+        ; 	HWND_TOPMOST:=-1
+        ; uFlags
+        ; 	SWP_NOSIZE:=0x0001
+        ; 	SWP_NOMOVE:=0x0002
+        ; 	SWP_NOREDRAW:=0x0008
+        ; 	SWP_NOACTIVATE:=0x0010
+        ; 	SWP_NOOWNERZORDER:=0x0200
+        ; 	SWP_NOSENDCHANGING:=0x0400
+        ; 	SWP_DEFERERASE:=0x2000
+        ; 	SWP_ASYNCWINDOWPOS:=0x4000
+        DllCall("SetWindowPos", "ptr", this["hBTT" WhichToolTip], "ptr", -1, "int", 0, "int", 0, "int", 0, "int", 0, "uint", 26139)
       }
-
-      ; 清理画刷
-      Gdip_DeleteBrush(pBrushBorder)
-      Gdip_DeleteBrush(pBrushBackground)
-
-      ; 计算居中显示坐标。由于 TextArea 返回的文字范围右边有很多空白，所以这里的居中坐标并不精确。
-      O.X:=O.Border+O.Margin, O.Y:=O.Border+O.Margin, O.Width:=TextWidth, O.Height:=TextHeight
-
-      ; 如果显示区域过小，文字无法完全显示，则将待显示文本最后4个字符替换为4个英文省略号，表示显示不完全。
-      ; 虽然有 GdipSetStringFormatTrimming 函数可以设置末尾显示省略号，但它偶尔需要增加额外的宽度才能显示出来。
-      ; 由于难以判断是否需要增加额外宽度，以及需要增加多少等等问题，所以直接用这种方式自己实现省略号的显示。
-      ; 之所以选择替换最后4个字符，是因为一般替换掉最后2个字符，才能确保至少一个省略号显示出来。
-      ; 为了应对意外情况，以及让省略号更加明显一点，所以选择替换最后4个。
-      ; 原始的 Text 需要用于显示前的比对，所以不能改原始值，必须用 TempText 。
-      if (TextArea[5]<StrLen(Text))
-        TempText:=TextArea[5]>4 ? SubStr(Text, 1 ,TextArea[5]-4) "…………" : SubStr(Text, 1 ,1) "…………"
-      else
-        TempText:=Text
-
-      ; 写字到框上。这个函数使用 O 中的 X,Y 去调整文字的位置。
-      this._TextToGraphics(this["G" WhichToolTip], TempText, O)
-
-      ; 调试用，可显示计算得到的文字范围。
-      if (this.DebugMode)
-      {
-        pBrush := Gdip_BrushCreateSolid(0x20ff0000)
-        Gdip_FillRectangle(this["G" WhichToolTip], pBrush, O.Border+O.Margin, O.Border+O.Margin, TextWidth, TextHeight)
-        Gdip_DeleteBrush(pBrush)
-      }
-
-      ; 返回文本框不超出目标范围（比如屏幕范围）的最佳坐标。
-      this._CalculateDisplayPosition(X, Y, RectWithBorderWidth, RectWithBorderHeight, O)
-
-      ; 显示
-      UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip]
-                        , X, Y, RectWithBorderWidth, RectWithBorderHeight, O.Transparent)
-
-      ; 因为 BTT 总会在使用一段时间后，被不明原因的置底，导致显示内容被其它窗口遮挡，以为没有正常显示，所以这里提升Z序到最上面！
-      ; 已测试过，此方法效率极高，远超 WinSet, Top 命令。
-      ; hWndInsertAfter
-      ; 	HWND_TOPMOST:=-1
-      ; uFlags
-      ; 	SWP_NOSIZE:=0x0001
-      ; 	SWP_NOMOVE:=0x0002
-      ; 	SWP_NOREDRAW:=0x0008
-      ; 	SWP_NOACTIVATE:=0x0010
-      ; 	SWP_NOOWNERZORDER:=0x0200
-      ; 	SWP_NOSENDCHANGING:=0x0400
-      ; 	SWP_DEFERERASE:=0x2000
-      ; 	SWP_ASYNCWINDOWPOS:=0x4000
-      DllCall("SetWindowPos", "ptr", this["hBTT" WhichToolTip], "ptr", -1, "int", 0, "int", 0, "int", 0, "int", 0, "uint", 26139)
 
       ; 保存参数值，以便之后比对参数值是否改变
         this["SavedText" WhichToolTip]        := Text
@@ -431,17 +460,23 @@ Class BeautifulToolTip
 
     ; 设置字体样式
     Style := 0
-    For eachStyle, valStyle in StrSplit(Styles, "|")
+    for eachStyle, valStyle in StrSplit(Styles, "|")
     {
       if InStr(Options.FontStyle, valStyle)
         Style |= (valStyle != "StrikeOut") ? (A_Index-1) : 8
     }
 
-    ; 加载字体
-    hFontFamily := Gdip_FontFamilyCreate(Options.Font)
-    if !hFontFamily
+    if (FileExist(Options.Font))  ; 加载未安装的本地字体
+    {
+      hFontCollection := Gdip_NewPrivateFontCollection()
+      hFontFamily := Gdip_CreateFontFamilyFromFile(Options.Font, hFontCollection)
+    }
+    if !hFontFamily               ; 加载已安装的字体
+      hFontFamily := Gdip_FontFamilyCreate(Options.Font)
+    if !hFontFamily               ; 加载默认字体
       hFontFamily := Gdip_FontFamilyCreateGeneric(1)
-    hFont := Gdip_FontCreate(hFontFamily, Options.FontSize, Style, Unit:=0)
+    ; 根据 DPI 缩放比例自动调整字号
+    hFont := Gdip_FontCreate(hFontFamily, Options.FontSize * Options.DPIScale, Style, Unit:=0)
 
     ; 设置文字格式化样式，LineLimit = 0x00002000 只显示完整的行。
     ; 比如最后一行，因为布局高度有限，只能显示出一半，此时就会让它完全不显示。
@@ -476,6 +511,8 @@ Class BeautifulToolTip
         Gdip_DeleteFont(hFont)
       if hFontFamily
         Gdip_DeleteFontFamily(hFontFamily)
+      if hFontCollection
+        Gdip_DeletePrivateFontCollection(hFontCollection)
       return E
     }
 
@@ -494,6 +531,8 @@ Class BeautifulToolTip
     Gdip_DeleteFont(hFont)
     Gdip_DeleteStringFormat(hStringFormat)
     Gdip_DeleteFontFamily(hFontFamily)
+    if hFontCollection
+      Gdip_DeletePrivateFontCollection(hFontCollection)
     return _E ? _E : returnRC
   }
 
@@ -566,6 +605,7 @@ Class BeautifulToolTip
     , O.MouseNeverCoverToolTip          := NonNull_Ret(Options.MouseNeverCoverToolTip         , 1 , 0 , 1 )   ; 鼠标永不遮挡文本框
     , O.DistanceBetweenMouseXAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseXAndToolTip, 16, "", "")   ; 鼠标与文本框的X距离
     , O.DistanceBetweenMouseYAndToolTip := NonNull_Ret(Options.DistanceBetweenMouseYAndToolTip, 16, "", "")   ; 鼠标与文本框的Y距离
+    , O.JustCalculateSize               := Options.JustCalculateSize                                          ; 仅计算显示尺寸并返回
 
     ; 难以比对两个对象是否一致，所以造一个变量比对。
     ; 这里的校验因素，必须是那些改变后会使画面内容也产生变化的因素。
@@ -611,8 +651,10 @@ Class BeautifulToolTip
       , TargetBottom := this.Monitors[hMonitor].Bottom
       , TargetWidth  := TargetRight-TargetLeft
       , TargetHeight := TargetBottom-TargetTop
+      ; 将对应屏幕的 DPIScale 存入 Options 中。
+      , Options.DPIScale := this.Monitors[hMonitor].DPIScale
     }
-    ; 已给出 x和y 或x 或y，都会走到下面3个分支去。
+      ; 已给出 x和y 或x 或y，都会走到下面3个分支去。
     else if (Options.CoordMode  = "Window" or Options.CoordMode  = "Relative")
     {	; 已给出 x或y 且使用窗口坐标
         WinGetPos, WinX, WinY, WinW, WinH, % "ahk_id " Options.TargetHWND
@@ -627,6 +669,8 @@ Class BeautifulToolTip
       , TargetBottom := TargetTop+TargetHeight
       , DisplayX     := (X="") ? MouseX : XInScreen
       , DisplayY     := (Y="") ? MouseY : YInScreen
+      , hMonitor     := MDMF_FromPoint(DisplayX, DisplayY, MONITOR_DEFAULTTONEAREST:=2)
+      , Options.DPIScale := this.Monitors[hMonitor].DPIScale
     }
     else if (Options.CoordMode  = "Client")
     {	; 已给出 x或y 且使用客户区坐标
@@ -648,15 +692,13 @@ Class BeautifulToolTip
       , TargetBottom := TargetTop+TargetHeight
       , DisplayX     := (X="") ? MouseX : XInScreen
       , DisplayY     := (Y="") ? MouseY : YInScreen
+      , hMonitor     := MDMF_FromPoint(DisplayX, DisplayY, MONITOR_DEFAULTTONEAREST:=2)
+      , Options.DPIScale := this.Monitors[hMonitor].DPIScale
     }
     else ; 这里必然 A_CoordModeToolTip = "Screen"
     {	; 已给出 x或y 且使用屏幕坐标
         DisplayX     := (X="") ? MouseX : X
       , DisplayY     := (Y="") ? MouseY : Y
-      ; 根据坐标判断在第几个屏幕里，并获得对应屏幕边界。
-      ; 使用 MONITOR_DEFAULTTONEAREST 设置，可以在给出的点不在任何显示器内时，返回距离最近的显示器。
-      ; 这样可以修正使用 1920,1080 这种错误的坐标，导致返回空值，导致画图失败的问题。
-      ; 为什么 1920,1080 是错误的呢？因为 1920 是宽度，而坐标起点是0，所以最右边坐标值是 1919，最下面是 1079。
       , hMonitor     := MDMF_FromPoint(DisplayX, DisplayY, MONITOR_DEFAULTTONEAREST:=2)
       , TargetLeft   := this.Monitors[hMonitor].Left
       , TargetTop    := this.Monitors[hMonitor].Top
@@ -664,6 +706,7 @@ Class BeautifulToolTip
       , TargetBottom := this.Monitors[hMonitor].Bottom
       , TargetWidth  := TargetRight-TargetLeft
       , TargetHeight := TargetBottom-TargetTop
+      , Options.DPIScale := this.Monitors[hMonitor].DPIScale
     }
 
     if (GetTargetSize=1)
@@ -684,7 +727,7 @@ Class BeautifulToolTip
       return, TargetSize
     }
 
-      DPIScale := A_ScreenDPI/96
+      DPIScale := Options.DPIScale
     ; 为跟随鼠标显示的文本框增加一个距离，避免鼠标和文本框挤一起发生遮挡。
     ; 因为前面需要用到原始的 DisplayX 和 DisplayY 进行计算，所以在这里才增加距离。
     , DisplayX := (X="") ? DisplayX+Options.DistanceBetweenMouseXAndToolTip*DPIScale : DisplayX
