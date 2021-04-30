@@ -13,6 +13,8 @@
 ---  
   
 ### Changelog  
+#### 2021.04.30  
+* Fixed a bug that can not run in win7. (introduced by 2021.04.20)  
 #### 2021.04.20  
 * Supports automatic scaling based on monitor DPI scaling, consistent with ToolTip features.  
 * Support for using font file path directly.  
@@ -33,6 +35,8 @@
 ---  
   
 ### 更新日志  
+#### 2021.04.30  
+ 修复 Win7 下不能运行的 bug 。（2021.04.20 引起）
 #### 2021.04.20  
 * 支持根据显示器 DPI 缩放比例自动缩放，与 ToolTip 特性保持一致。  
 * 支持直接使用未安装的本地字体。  

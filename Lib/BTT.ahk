@@ -4,9 +4,11 @@ https://github.com/telppa/BeautifulToolTip
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 version:
-2021.04.20
+2021.04.30
 
 changelog:
+2021.04.30
+  修复 Win7 下不能运行的 bug 。（2021.04.20 引起）
 2021.04.20
   支持根据显示器 DPI 缩放比例自动缩放，与 ToolTip 特性保持一致。
   支持直接使用未安装的本地字体。
@@ -198,12 +200,15 @@ Class BeautifulToolTip
           continue
         ; https://github.com/Ixiko/AHK-libs-and-classes-collection/blob/e421acb801867edb659a54b7473e6e617f2b267b/libs/g-n/Monitor.ahk
         ; ahk 源码里 A_ScreenDPI 就是只获取了 dpiX ，所以这里保持一致
-        if (DllCall("Shcore.dll\GetDpiForMonitor", "Ptr", hMonitor, "Int", Type, "UIntP", dpiX, "UIntP", dpiY, "UInt")!=0)
+        osv := StrSplit(A_OSVersion, ".")               ; https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/wdm/ns-wdm-_osversioninfoexw
+        if (osv[1] < 6 || (osv[1] == 6 && osv[2] < 3))  ; WIN_8- 。Win7 必须用这种方式，否则会出错
         {
           hDC  := DllCall("Gdi32.dll\CreateDC", "Str", hMonitor.name, "Ptr", 0, "Ptr", 0, "Ptr", 0, "Ptr")
-          dpiX := DllCall("Gdi32.dll\GetDeviceCaps", "Ptr", hDC, "Int", 88)    ; LOGPIXELSX = 88
+          dpiX := DllCall("Gdi32.dll\GetDeviceCaps", "Ptr", hDC, "Int", 88) ; LOGPIXELSX = 88
           DllCall("Gdi32.dll\DeleteDC", "Ptr", hDC)
         }
+        else
+          DllCall("Shcore.dll\GetDpiForMonitor", "Ptr", hMonitor, "Int", Type, "UIntP", dpiX, "UIntP", dpiY, "UInt")
         this.Monitors[hMonitor].DPIScale := NonNull_Ret(dpiX, A_ScreenDPI)/96
       }
 
