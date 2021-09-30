@@ -4,8 +4,8 @@ CoordMode, ToolTip, Screen
 
 Text1=
 (
-ToolTip 会闪烁。
-ToolTip will blinking.
+ToolTip`t会闪烁。
+ToolTip`twill blinking.
 
 1234567890
 qwertyuiop[]
@@ -15,8 +15,8 @@ zxcvbnm,./
 
 Text2=
 (
-BeautifulToolTip 不会闪烁。
-BeautifulToolTip will not blinking.
+BeautifulToolTip`t不会闪烁。
+BeautifulToolTip`twill not blinking.
 
 1234567890
 qwertyuiop[]

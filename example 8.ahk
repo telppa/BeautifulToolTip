@@ -18,7 +18,7 @@ I am btt2, the following shows the return values of btt1.
 --------------------------------------------------------
 )
 for k, v in ret
-	Text2.="`n" k " : " v
+	Text2.="`n" k "`t: " v
 btt(Text2,200,300,2,"Style6")							; btt2
 
 

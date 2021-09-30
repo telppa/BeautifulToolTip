@@ -6,8 +6,8 @@
 
 Text=
 (
-这是一个演示程序。
-this is a demo.
+这`t是`t一个`t演示程序。
+this`tis`ta`tdemo.
 1234567890
 qwertyuiop[]
 asdfghjkl;'

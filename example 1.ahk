@@ -1,10 +1,10 @@
 ﻿#SingleInstance Force
 
-btt("This is BeautifulToolTip")
+btt("This is`tBeautifulToolTip")
 Sleep, 3000
 
 CoordMode, ToolTip, Screen
-btt("This is BeautifulToolTip`nCoordMode = Screen`nWhichToolTip = 2",500,500,2)
+btt("This is`tBeautifulToolTip`nCoordMode = Screen`nWhichToolTip = 2",500,500,2)
 Sleep, 5000
 
 btt()

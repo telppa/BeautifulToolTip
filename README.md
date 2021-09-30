@@ -13,6 +13,9 @@
 ---  
   
 ### Changelog  
+#### 2021.09.29  
+* Add TabStops.  
+* All functions except GDIP library are built into Class.  
 #### 2021.04.30  
 * Fixed a bug that can not run in win7. (introduced by 2021.04.20)  
 #### 2021.04.20  
@@ -35,8 +38,11 @@
 ---  
   
 ### 更新日志  
+#### 2021.09.29  
+* 支持设置 TabStops 。  
+* 除 GDIP 库外所有函数内置到 Class 中，降低库冲突的可能性。  
 #### 2021.04.30  
- 修复 Win7 下不能运行的 bug 。（2021.04.20 引起）
+* 修复 Win7 下不能运行的 bug 。（2021.04.20 引起）  
 #### 2021.04.20  
 * 支持根据显示器 DPI 缩放比例自动缩放，与 ToolTip 特性保持一致。  
 * 支持直接使用未安装的本地字体。  
