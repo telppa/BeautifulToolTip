@@ -14,7 +14,7 @@
   
 ### Changelog  
 #### 2021.10.03  
-* Change the Include way to reduce the possibility of library conflict.  
+* Change the way of Include to reduce the possibility of library conflict.  
 #### 2021.09.29  
 * Add TabStops.  
 * All functions except GDIP library are built into Class.  
