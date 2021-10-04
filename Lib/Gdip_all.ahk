@@ -14,6 +14,7 @@
 ;
 ; Gdip standard library versions:
 ; by Marius Șucan - gathered user-contributed functions and implemented hundreds of new functions
+; - v1.87 on 29/09/2021
 ; - v1.85 on 24/08/2020
 ; - v1.84 on 05/06/2020
 ; - v1.83 on 24/05/2020
@@ -63,6 +64,7 @@
 ; - v1.01 on 31/05/2008
 ;
 ; Detailed history:
+; - 29/09/2021 = many Bug fixes and added Gdip_GetInstalledFontFamilies() by MCL and other functions
 ; - 24/08/2020 = Bug fixes and added Gdip_BlendBitmaps() and Gdip_SetAlphaChannel()
 ; - 05/06/2020 = Synchronized with mmikeww's repository and fixed a few bugs
 ; - 24/05/2020 = Added a few more functions and fixed or improved already exiting functions
@@ -815,7 +817,7 @@ Gdip_LibraryVersion() {
 ;                 Updated by Marius Șucan reflecting the work on Gdip_all extended compilation
 
 Gdip_LibrarySubVersion() {
-   return 1.86
+   return 1.87 ; 29/09/2021
 }
 
 ;#####################################################################################
@@ -2405,20 +2407,19 @@ Gdip_GetImageBounds(pBitmap) {
    If !pBitmap
       Return 2
 
-   rData := {}
    VarSetCapacity(RectF, 16, 0)
    E := DllCall("gdiplus\GdipGetImageBounds", "UPtr", pBitmap, "UPtr", &RectF, "Int*", 0)
 
    If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      Return rData
    } Else {
-    Return E
+      Return E
    }
-
-   return rData
 }
 
 Gdip_GetImageFlags(pBitmap) {
@@ -3370,9 +3371,8 @@ Gdip_GetPenFillType(pPen) {
 ; -1 - The pen type is unknown
 ; -2 - Error
 
-   Static Ptr := "UPtr"
    result := 0
-   gdipLastError := DllCall("gdiplus\GdipGetPenFillType", Ptr, pPen, "int*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetPenFillType", "UPtr", pPen, "int*", result)
    If gdipLastError
       return -2
    Return result
@@ -3380,8 +3380,7 @@ Gdip_GetPenFillType(pPen) {
 
 Gdip_GetPenStartCap(pPen) {
    result := 0
-   Static Ptr := "UPtr"
-   gdipLastError := DllCall("gdiplus\GdipGetPenStartCap", Ptr, pPen, "int*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetPenStartCap", "UPtr", pPen, "int*", result)
    If gdipLastError
       return -1
    Return result
@@ -3389,8 +3388,7 @@ Gdip_GetPenStartCap(pPen) {
 
 Gdip_GetPenEndCap(pPen) {
    result := 0
-   Static Ptr := "UPtr"
-   gdipLastError := DllCall("gdiplus\GdipGetPenEndCap", Ptr, pPen, "int*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetPenEndCap", "UPtr", pPen, "int*", result)
    If gdipLastError
       return -1
    Return result
@@ -3398,8 +3396,7 @@ Gdip_GetPenEndCap(pPen) {
 
 Gdip_GetPenDashCaps(pPen) {
    result := 0
-   Static Ptr := "UPtr"
-   gdipLastError := DllCall("gdiplus\GdipGetPenDashCap197819", Ptr, pPen, "int*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetPenDashCap197819", "UPtr", pPen, "int*", result)
    If gdipLastError
       return -1
    Return result
@@ -3407,8 +3404,7 @@ Gdip_GetPenDashCaps(pPen) {
 
 Gdip_GetPenAlignment(pPen) {
    result := 0
-   Static Ptr := "UPtr"
-   gdipLastError := DllCall("gdiplus\GdipGetPenMode", Ptr, pPen, "int*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetPenMode", "UPtr", pPen, "int*", result)
    If gdipLastError
       return -1
    Return result
@@ -3438,18 +3434,15 @@ Gdip_GetPenAlignment(pPen) {
 ; Return value: status enumeration
 
 Gdip_SetPenLineCaps(pPen, StartCap, EndCap, DashCap) {
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetPenLineCap197819", Ptr, pPen, "int", StartCap, "int", EndCap, "int", DashCap)
+   Return DllCall("gdiplus\GdipSetPenLineCap197819", "UPtr", pPen, "int", StartCap, "int", EndCap, "int", DashCap)
 }
 
 Gdip_SetPenStartCap(pPen, LineCap) {
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetPenStartCap", Ptr, pPen, "int", LineCap)
+   Return DllCall("gdiplus\GdipSetPenStartCap", "UPtr", pPen, "int", LineCap)
 }
 
 Gdip_SetPenEndCap(pPen, LineCap) {
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetPenEndCap", Ptr, pPen, "int", LineCap)
+   Return DllCall("gdiplus\GdipSetPenEndCap", "UPtr", pPen, "int", LineCap)
 }
 
 Gdip_SetPenDashCaps(pPen, LineCap) {
@@ -3457,8 +3450,7 @@ Gdip_SetPenDashCaps(pPen, LineCap) {
 ; Pen Alignment Inset, you cannot use that pen
 ; to draw triangular dash caps.
 
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetPenDashCap197819", Ptr, pPen, "int", LineCap)
+   Return DllCall("gdiplus\GdipSetPenDashCap197819", "UPtr", pPen, "int", LineCap)
 }
 
 Gdip_SetPenAlignment(pPen, Alignment) {
@@ -3469,12 +3461,12 @@ Gdip_SetPenAlignment(pPen, Alignment) {
 ; 1 [Inset]  - Specifies, when drawing a polygon, that the pen is aligned on the inside of the edge of the polygon.
 
    Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetPenMode", Ptr, pPen, "int", Alignment)
+   Return DllCall("gdiplus\GdipSetPenMode", "UPtr", pPen, "int", Alignment)
 }
 
 Gdip_GetPenCompoundCount(pPen) {
     result := 0
-    E := DllCall("gdiplus\GdipGetPenCompoundCount", Ptr, pPen, "int*", result)
+    E := DllCall("gdiplus\GdipGetPenCompoundCount", "UPtr", pPen, "int*", result)
     If E
        Return -1
     Return result
@@ -3972,20 +3964,19 @@ Gdip_SetLinearGrBrushGammaCorrection(pLinearGradientBrush, UseGammaCorrection) {
 }
 
 Gdip_GetLinearGrBrushRect(pLinearGradientBrush) {
-  rData := {}
   VarSetCapacity(RectF, 16, 0)
   E := DllCall("gdiplus\GdipGetLineRect", "UPtr", pLinearGradientBrush, "UPtr", &RectF)
 
   If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      Return rData
   } Else {
-    Return E
+      Return E
   }
-
-  return rData
 }
 
 Gdip_ResetLinearGrBrushTransform(pLinearGradientBrush) {
@@ -4042,9 +4033,8 @@ Gdip_RotateLinearGrBrushAtCenter(pLinearGradientBrush, Angle, MatrixOrder:=1) {
 }
 
 Gdip_GetLinearGrBrushWrapMode(pLinearGradientBrush) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetLineWrapMode", Ptr, pLinearGradientBrush, "int*", result)
+   E := DllCall("gdiplus\GdipGetLineWrapMode", "UPtr", pLinearGradientBrush, "int*", result)
    If E
       return -1
    Return result
@@ -4053,25 +4043,21 @@ Gdip_GetLinearGrBrushWrapMode(pLinearGradientBrush) {
 Gdip_SetLinearGrBrushLinearBlend(pLinearGradientBrush, nFocus, nScale) {
 ; https://purebasic.developpez.com/tutoriels/gdi/documentation/GdiPlus/LinearGradientBrush/html/GdipSetLineLinearBlend.html
 
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetLineLinearBlend", Ptr, pLinearGradientBrush, "float", nFocus, "float", nScale)
+   Return DllCall("gdiplus\GdipSetLineLinearBlend", "UPtr", pLinearGradientBrush, "float", nFocus, "float", nScale)
 }
 
 Gdip_SetLinearGrBrushSigmaBlend(pLinearGradientBrush, nFocus, nScale) {
 ; https://purebasic.developpez.com/tutoriels/gdi/documentation/GdiPlus/LinearGradientBrush/html/GdipSetLineSigmaBlend.html
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetLineSigmaBlend", Ptr, pLinearGradientBrush, "float", nFocus, "float", nScale)
+   Return DllCall("gdiplus\GdipSetLineSigmaBlend", "UPtr", pLinearGradientBrush, "float", nFocus, "float", nScale)
 }
 
 Gdip_SetLinearGrBrushWrapMode(pLinearGradientBrush, WrapMode) {
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetLineWrapMode", Ptr, pLinearGradientBrush, "int", WrapMode)
+   Return DllCall("gdiplus\GdipSetLineWrapMode", "UPtr", pLinearGradientBrush, "int", WrapMode)
 }
 
 Gdip_GetLinearGrBrushBlendCount(pLinearGradientBrush) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetLineBlendCount", Ptr, pLinearGradientBrush, "int*", result)
+   E := DllCall("gdiplus\GdipGetLineBlendCount", "UPtr", pLinearGradientBrush, "int*", result)
    If E
       return -1
    Return result
@@ -4297,7 +4283,7 @@ Gdip_DrawOrientedString(pGraphics, String, FontName, Size, Style, X, Y, Width, H
    Return E ? E : PathBounds
 }
 
-Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:="", Measure:=0, userBrush:=0, Unit:=0) {
+Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:="", Measure:=0, userBrush:=0, Unit:=0, acceptTabStops:=0) {
 ; Font parameter can be a name of an already installed font or it can point to a font file
 ; to be loaded and used to draw the string.
 ;
@@ -4396,6 +4382,9 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
    }
 
    CreateRectF(RC, xpos, ypos, Width, Height)
+   If (acceptTabStops=1)
+      Gdip_SetStringFormatTabStops(hStringFormat, [50,100,200])
+
    Gdip_SetStringFormatAlign(hStringFormat, Align)
    If InStr(Options, "autotrim")
       Gdip_SetStringFormatTrimming(hStringFormat, 3)
@@ -4690,7 +4679,7 @@ Gdip_StringFormatCreate(FormatFlags:=0, LangID:=0) {
 ; - Characters overhanging the layout rectangle and text extending outside the layout rectangle are allowed to show.
 
    hStringFormat := 0
-   E := DllCall("gdiplus\GdipCreateStringFormat", "int", FormatFlags, "int", LangID, "UPtr*", hStringFormat)
+   gdipLastError := DllCall("gdiplus\GdipCreateStringFormat", "int", FormatFlags, "int", LangID, "UPtr*", hStringFormat)
    return hStringFormat
 }
 
@@ -4723,45 +4712,40 @@ Gdip_SetStringFormatAlign(hStringFormat, Align) {
 }
 
 Gdip_GetStringFormatAlign(hStringFormat) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetStringFormatAlign", Ptr, hStringFormat, "int*", result)
+   E := DllCall("gdiplus\GdipGetStringFormatAlign", "UPtr", hStringFormat, "int*", result)
    If E
       Return -1
    Return result
 }
 
 Gdip_GetStringFormatLineAlign(hStringFormat) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetStringFormatLineAlign", Ptr, hStringFormat, "int*", result)
+   E := DllCall("gdiplus\GdipGetStringFormatLineAlign", "UPtr", hStringFormat, "int*", result)
    If E
       Return -1
    Return result
 }
 
 Gdip_GetStringFormatDigitSubstitution(hStringFormat) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetStringFormatDigitSubstitution", Ptr, hStringFormat, "ushort*", 0, "int*", result)
+   E := DllCall("gdiplus\GdipGetStringFormatDigitSubstitution", "UPtr", hStringFormat, "ushort*", 0, "uint*", result)
    If E
       Return -1
    Return result
 }
 
 Gdip_GetStringFormatHotkeyPrefix(hStringFormat) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetStringFormatHotkeyPrefix", Ptr, hStringFormat, "int*", result)
+   E := DllCall("gdiplus\GdipGetStringFormatHotkeyPrefix", "UPtr", hStringFormat, "uint*", result)
    If E
       Return -1
    Return result
 }
 
 Gdip_GetStringFormatTrimming(hStringFormat) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetStringFormatTrimming", Ptr, hStringFormat, "int*", result)
+   E := DllCall("gdiplus\GdipGetStringFormatTrimming", "UPtr", hStringFormat, "int*", result)
    If E
       Return -1
    Return result
@@ -4775,8 +4759,7 @@ Gdip_SetStringFormatLineAlign(hStringFormat, StringAlign) {
 ; 1 - Center
 ; 2 - Bottom
 
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipSetStringFormatLineAlign", Ptr, hStringFormat, "int", StringAlign)
+   Return DllCall("gdiplus\GdipSetStringFormatLineAlign", "UPtr", hStringFormat, "int", StringAlign)
 }
 
 Gdip_SetStringFormatDigitSubstitution(hStringFormat, DigitSubstitute, LangID:=0) {
@@ -4787,14 +4770,12 @@ Gdip_SetStringFormatDigitSubstitution(hStringFormat, DigitSubstitute, LangID:=0)
 ; 2 - Substitution digits that correspond with the official national language of the user's locale
 ; 3 - Substitution digits that correspond with the user's native script or language
 
-   Static Ptr := "UPtr"
-   return DllCall("gdiplus\GdipSetStringFormatDigitSubstitution", Ptr, hStringFormat, "ushort", LangID, "int", DigitSubstitute)
+   return DllCall("gdiplus\GdipSetStringFormatDigitSubstitution", "UPtr", hStringFormat, "ushort", LangID, "uint", DigitSubstitute)
 }
 
 Gdip_SetStringFormatFlags(hStringFormat, Flags) {
 ; see Gdip_StringFormatCreate() for possible StringFormatFlags
-   Static Ptr := "UPtr"
-   return DllCall("gdiplus\GdipSetStringFormatFlags", Ptr, hStringFormat, "int", Flags)
+   return DllCall("gdiplus\GdipSetStringFormatFlags", "UPtr", hStringFormat, "int", Flags)
 }
 
 Gdip_SetStringFormatHotkeyPrefix(hStringFormat, PrefixProcessMode) {
@@ -4805,25 +4786,24 @@ Gdip_SetStringFormatHotkeyPrefix(hStringFormat, PrefixProcessMode) {
 ;     All single ampersands are removed, the first character that follows a single ampersand is displayed underlined.
 ; 2 - Same as 1 but a character following a single ampersand is not displayed underlined.
 
-   Static Ptr := "UPtr"
-   return DllCall("gdiplus\GdipSetStringFormatHotkeyPrefix", Ptr, hStringFormat, "int", PrefixProcessMode)
+   return DllCall("gdiplus\GdipSetStringFormatHotkeyPrefix", "UPtr", hStringFormat, "uint", PrefixProcessMode)
 }
 
 Gdip_SetStringFormatTrimming(hStringFormat, TrimMode) {
 ; TrimMode - The trimming style  to use:
-; 0 - No trimming is done
-; 1 - String is broken at the boundary of the last character that is inside the layout rectangle
-; 2 - String is broken at the boundary of the last word that is inside the layout rectangle
-; 3 - String is broken at the boundary of the last character that is inside the layout rectangle and an ellipsis (...) is inserted after the character
-; 4 - String is broken at the boundary of the last word that is inside the layout rectangle and an ellipsis (...) is inserted after the word
-; 5 - The center is removed from the string and replaced by an ellipsis. The algorithm keeps as much of the last portion of the string as possible
+; 0 - Trim - No trimming is done
+; 1 - TrimChar - String is broken at the boundary of the last character that is inside the layout rectangle
+; 2 - TrimWord - String is broken at the boundary of the last word that is inside the layout rectangle
+; 3 - EllipsisChar - String is broken at the boundary of the last character that is inside the layout rectangle and an ellipsis (...) is inserted after the character
+; 4 - EllipsisWord - String is broken at the boundary of the last word that is inside the layout rectangle and an ellipsis (...) is inserted after the word
+; 5 - EllipsisMid - The center is removed from the string and replaced by an ellipsis. The algorithm keeps as much of the last portion of the string as possible
 
-   Static Ptr := "UPtr"
-   return DllCall("gdiplus\GdipSetStringFormatTrimming", Ptr, hStringFormat, "int", TrimMode)
+   return DllCall("gdiplus\GdipSetStringFormatTrimming", "UPtr", hStringFormat, "int", TrimMode)
 }
 
 Gdip_SetStringFormatTabStops(hStringFormat, aTabStops) {
 ; aTabStops - an array like this [50, 100]
+; added by telppa
    if (!aTabStops.Length())
       return
    
@@ -4834,28 +4814,29 @@ Gdip_SetStringFormatTabStops(hStringFormat, aTabStops) {
    for k, v in aTabStops
       NumPut(v, tabStops, (A_Index - 1) * 4, "float")
    
-   return, DllCall("gdiplus\GdipSetStringFormatTabStops", "UPtr", hStringFormat, "float", firstTabOffset, "int", count, "ptr", &tabStops)
+   return DllCall("gdiplus\GdipSetStringFormatTabStops", "UPtr", hStringFormat, "float", firstTabOffset, "int", count, "ptr", &tabStops)
 }
 
 Gdip_GetStringFormatTabStopCount(hStringFormat) {
+; added by telppa
    VarSetCapacity(count, 4)
-   DllCall("gdiplus\GdipGetStringFormatTabStopCount", "UPtr", hStringFormat, "ptr", &count)
-   return, NumGet(count, 0, "int")
+   gdipLastError := DllCall("gdiplus\GdipGetStringFormatTabStopCount", "UPtr", hStringFormat, "ptr", &count)
+   return NumGet(count, 0, "int")
 }
 
 Gdip_GetStringFormatTabStops(hStringFormat) {
 ; Returns an array like this [50, 80, 100] .
+; added by telppa
    count := Gdip_GetStringFormatTabStopCount(hStringFormat)
    firstTabOffset := 0
    VarSetCapacity(tabStops, count * 4)
    
-   DllCall("gdiplus\GdipGetStringFormatTabStops", "UPtr", hStringFormat, "int", count, "ptr", &firstTabOffset, "ptr", &tabStops)
-   
+   gdipLastError := DllCall("gdiplus\GdipGetStringFormatTabStops", "UPtr", hStringFormat, "int", count, "ptr", &firstTabOffset, "ptr", &tabStops)
    ret := []
    loop, % count
       ret.Push(NumGet(tabStops, (A_Index - 1) * 4, "float"))
    
-   return, ret
+   return ret
 }
 
 Gdip_FontCreate(hFontFamily, Size, Style:=0, Unit:=0) {
@@ -4868,13 +4849,13 @@ Gdip_FontCreate(hFontFamily, Size, Style:=0, Unit:=0) {
 ; Strikeout = 8
 ; Unit options: see Gdip_SetPageUnit()
    hFont := 0
-   DllCall("gdiplus\GdipCreateFont", "UPtr", hFontFamily, "float", Size, "int", Style, "int", Unit, "UPtr*", hFont)
+   gdipLastError := DllCall("gdiplus\GdipCreateFont", "UPtr", hFontFamily, "float", Size, "int", Style, "int", Unit, "UPtr*", hFont)
    return hFont
 }
 
 Gdip_FontFamilyCreate(FontName) {
    hFontFamily := 0
-   _E := DllCall("gdiplus\GdipCreateFontFamilyFromName"
+   gdipLastError := DllCall("gdiplus\GdipCreateFontFamilyFromName"
                , "WStr", FontName, "uint", 0
                , "UPtr*", hFontFamily)
 
@@ -4883,7 +4864,7 @@ Gdip_FontFamilyCreate(FontName) {
 
 Gdip_NewPrivateFontCollection() {
    hFontCollection := 0
-   DllCall("gdiplus\GdipNewPrivateFontCollection", "ptr*", hFontCollection)
+   gdipLastError := DllCall("gdiplus\GdipNewPrivateFontCollection", "ptr*", hFontCollection)
    Return hFontCollection
 }
 
@@ -4916,6 +4897,50 @@ Gdip_CreateFontFamilyFromFile(FontFile, hFontCollection, FontName:="") {
    If !E
       DllCall("gdiplus\GdipCreateFontFamilyFromName", "str", FontName, "ptr", hFontCollection, "uint*", hFontFamily)
    Return hFontFamily
+}
+
+Gdip_GetInstalledFontFamilies(nameRegex := "") {
+   ; The results can be filtered. Example: GetInstalledFontFamilies("Arial")
+   ; Returns an array with names of installed font families.
+   ; Source: https://github.com/mcl-on-github/oGdip.ahk/blob/main/OGdip.ahk
+   ; by MCL
+
+   Static pFontCollection := 0
+   If (pFontCollection == 0) {
+      DllCall("GdiPlus\GdipNewInstalledFontCollection"
+      , "Ptr*", pFontCollection := 0)
+   }
+   
+   DllCall("GdiPlus\GdipGetFontCollectionFamilyCount"
+   , "Ptr" , pFontCollection
+   , "Int*", familyCount := 0)
+   
+   VarSetCapacity(familyList, 2*A_PtrSize*familyCount, 0)
+   DllCall("GdiPlus\GdipGetFontCollectionFamilyList"
+   , "Ptr" ,  pFontCollection
+   , "Int" ,  familyCount
+   , "Ptr" ,  &familyList
+   , "Int*",  familyCount)
+   
+   langId := 0
+   families := []
+   
+   Loop % familyCount {
+      familyPtr := NumGet(familyList, (A_Index-1)*A_PtrSize, "Ptr")
+      
+      VarSetCapacity(familyName, 32*2, 0)  ; LF_FACESIZE = 32 WChars
+      
+      DllCall("GdiPlus\GdipGetFamilyName"
+      , "Ptr"   , familyPtr
+      , "WStr"  , familyName
+      , "UShort", langId)
+      
+      If (familyName ~= nameRegex) {
+         families.Push(familyName)
+      }
+   }
+   
+   Return families
 }
 
 Gdip_FontFamilyCreateGeneric(whichStyle) {
@@ -4993,9 +5018,8 @@ Gdip_GetFontSize(hFont) {
 
 Gdip_GetFontStyle(hFont) {
 ; see also Gdip_FontCreate()
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetFontStyle", Ptr, hFont, "int*", result)
+   g := DllCall("gdiplus\GdipGetFontStyle", "UPtr", hFont, "int*", result)
    If E
       Return -1
    Return result
@@ -5003,44 +5027,37 @@ Gdip_GetFontStyle(hFont) {
 
 Gdip_GetFontUnit(hFont) {
 ; Gets the unit of measure of a Font object.
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipGetFontUnit", Ptr, hFont, "int*", result)
+   E := DllCall("gdiplus\GdipGetFontUnit", "UPtr", hFont, "int*", result)
    If E
       Return -1
    Return result
 }
 
-Gdip_CloneFont(hfont) {
-   Static Ptr := "UPtr"
-   newHFont := 0
-   gdipLastError := DllCall("gdiplus\GdipCloneFont", Ptr, hFont, "UPtr*", newHFont)
-   Return newHFont
-}
-
 Gdip_GetFontFamily(hFont) {
 ; On success returns a handle to a hFontFamily object
-   Static Ptr := "UPtr"
    hFontFamily := 0
-   gdipLastError := DllCall("gdiplus\GdipGetFamily", Ptr, hFont, "UPtr*", hFontFamily)
+   gdipLastError := DllCall("gdiplus\GdipGetFamily", "UPtr", hFont, "UPtr*", hFontFamily)
    Return hFontFamily
 }
 
+Gdip_CloneFont(hfont) {
+   newHFont := 0
+   gdipLastError := DllCall("gdiplus\GdipCloneFont", "UPtr", hFont, "UPtr*", newHFont)
+   Return newHFont
+}
 
 Gdip_CloneFontFamily(hFontFamily) {
-   Static Ptr := "UPtr"
    newHFontFamily := 0
-   gdipLastError := DllCall("gdiplus\GdipCloneFontFamily", Ptr, hFontFamily, "UPtr*", newHFontFamily)
+   gdipLastError := DllCall("gdiplus\GdipCloneFontFamily", "UPtr", hFontFamily, "UPtr*", newHFontFamily)
    Return newHFontFamily
 }
 
 Gdip_IsFontStyleAvailable(hFontFamily, Style) {
 ; Remarks: given a proper hFontFamily object, it seems to be always 
 ; returning 1 [true] regardless of Style...
-
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipIsStyleAvailable", Ptr, hFontFamily, "int", Style, "Int*", result)
+   E := DllCall("gdiplus\GdipIsStyleAvailable", "UPtr", hFontFamily, "int", Style, "Int*", result)
    If E
       Return -1
    Return result
@@ -5048,38 +5065,31 @@ Gdip_IsFontStyleAvailable(hFontFamily, Style) {
 
 Gdip_GetFontFamilyCellScents(hFontFamily, ByRef Ascent, ByRef Descent, Style:=0) {
 ; Ascent and Descent values are given in «design units»
-
-   Static Ptr := "UPtr"
-   Ascent := 0
-   Descent := 0
-   E := DllCall("gdiplus\GdipGetCellAscent", Ptr, hFontFamily, "int", Style, "ushort*", Ascent)
-   E := DllCall("gdiplus\GdipGetCellDescent", Ptr, hFontFamily, "int", Style, "ushort*", Descent)
+   Ascent := Descent := 0
+   E := DllCall("gdiplus\GdipGetCellAscent", "UPtr", hFontFamily, "int", Style, "ushort*", Ascent)
+   E := DllCall("gdiplus\GdipGetCellDescent", "UPtr", hFontFamily, "int", Style, "ushort*", Descent)
    Return E
 }
 
 Gdip_GetFontFamilyEmHeight(hFontFamily, Style:=0) {
 ; EmHeight returned in «design units»
-   Static Ptr := "UPtr"
    result := 0
-   gdipLastError := DllCall("gdiplus\GdipGetEmHeight", Ptr, hFontFamily, "int", Style, "ushort*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetEmHeight", "UPtr", hFontFamily, "int", Style, "ushort*", result)
    Return result
 }
 
 Gdip_GetFontFamilyLineSpacing(hFontFamily, Style:=0) {
 ; Line spacing returned in «design units»
-   Static Ptr := "UPtr"
    result := 0
-   gdipLastError := DllCall("gdiplus\GdipGetLineSpacing", Ptr, hFontFamily, "int", Style, "ushort*", result)
+   gdipLastError := DllCall("gdiplus\GdipGetLineSpacing", "UPtr", hFontFamily, "int", Style, "ushort*", result)
    Return result
 }
 
 Gdip_GetFontFamilyName(hFontFamily) {
-   Static Ptr := "UPtr"
    VarSetCapacity(FontName, 90)
-   gdipLastError := DllCall("gdiplus\GdipGetFamilyName", Ptr, hFontFamily, "Ptr", &FontName, "ushort", 0)
+   gdipLastError := DllCall("gdiplus\GdipGetFamilyName", "UPtr", hFontFamily, "Ptr", &FontName, "ushort", 0)
    Return FontName
 }
-
 
 ;#####################################################################################
 ; Matrix functions
@@ -5099,15 +5109,13 @@ Gdip_CreateMatrix() {
 
 Gdip_InvertMatrix(hMatrix) {
 ; Replaces the elements of a matrix with the elements of its inverse
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipInvertMatrix", Ptr, hMatrix)
+   Return DllCall("gdiplus\GdipInvertMatrix", "UPtr", hMatrix)
 }
 
 Gdip_IsMatrixEqual(hMatrixA, hMatrixB) {
 ; compares two matrices; if identical, the function returns 1
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipIsMatrixEqual", Ptr, hMatrixA, Ptr, hMatrixB, "int*", result)
+   E := DllCall("gdiplus\GdipIsMatrixEqual", "UPtr", hMatrixA, "UPtr", hMatrixB, "int*", result)
    If E
       Return -1
    Return result
@@ -5116,18 +5124,16 @@ Gdip_IsMatrixEqual(hMatrixA, hMatrixB) {
 Gdip_IsMatrixIdentity(hMatrix) {
 ; The identity matrix represents a transformation with no scaling, translation, rotation and conversion, and
 ; represents a transformation that does nothing.
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipIsMatrixIdentity", Ptr, hMatrix, "int*", result)
+   E := DllCall("gdiplus\GdipIsMatrixIdentity", "UPtr", hMatrix, "int*", result)
    If E
       Return -1
    Return result
 }
 
 Gdip_IsMatrixInvertible(hMatrix) {
-   Static Ptr := "UPtr"
    result := 0
-   E := DllCall("gdiplus\GdipIsMatrixInvertible", Ptr, hMatrix, "int*", result)
+   E := DllCall("gdiplus\GdipIsMatrixInvertible", "UPtr", hMatrix, "int*", result)
    If E
       Return -1
    Return result
@@ -5139,14 +5145,12 @@ Gdip_MultiplyMatrix(hMatrixA, hMatrixB, matrixOrder) {
 ; 0 - The second matrix is on the left
 ; 1 - The second matrix is on the right
 
-   Static Ptr := "UPtr"
-   Return DllCall("gdiplus\GdipMultiplyMatrix", Ptr, hMatrixA, Ptr, hMatrixB, "int", matrixOrder)
+   Return DllCall("gdiplus\GdipMultiplyMatrix", "UPtr", hMatrixA, "UPtr", hMatrixB, "int", matrixOrder)
 }
 
 Gdip_CloneMatrix(hMatrix) {
-   Static Ptr := "UPtr"
    newHMatrix := 0
-   gdipLastError := DllCall("gdiplus\GdipCloneMatrix", Ptr, hMatrix, "UPtr*", newHMatrix)
+   gdipLastError := DllCall("gdiplus\GdipCloneMatrix", "UPtr", hMatrix, "UPtr*", newHMatrix)
    return newHMatrix
 }
 
@@ -5898,37 +5902,35 @@ Gdip_SetClipFromGraphics(pGraphics, pGraphicsSrc, CombineMode:=0) {
 }
 
 Gdip_GetClipBounds(pGraphics) {
-  rData := {}
   VarSetCapacity(RectF, 16, 0)
   E := DllCall("gdiplus\GdipGetClipBounds", "UPtr", pGraphics, "UPtr", &RectF)
 
   If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      Return rData
   } Else {
-    Return E
+      Return E
   }
-
-  return rData
 }
 
 Gdip_GetVisibleClipBounds(pGraphics) {
-  rData := {}
   VarSetCapacity(RectF, 16, 0)
   E := DllCall("gdiplus\GdipGetVisibleClipBounds", "UPtr", pGraphics, "UPtr", &RectF)
 
   If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      Return rData
   } Else {
-    Return E
+      Return E
   }
-
-  return rData
 }
 
 Gdip_TranslateClip(pGraphics, dX, dY) {
@@ -5941,9 +5943,7 @@ Gdip_ResetClip(pGraphics) {
 
 Gdip_GetClipRegion(pGraphics) {
    hRegion := Gdip_CreateRegion()
-   E := DllCall("gdiplus\GdipGetClip", "UPtr", pGraphics, "UPtr", hRegion)
-   If E
-      return -1
+   gdipLastError := DllCall("gdiplus\GdipGetClip", "UPtr", pGraphics, "UPtr", hRegion)
    return hRegion
 }
 
@@ -6011,17 +6011,13 @@ Gdip_CreateRegionRect(x, y, w, h) {
 
 Gdip_IsEmptyRegion(pGraphics, hRegion) {
    result := 0
-   E := DllCall("gdiplus\GdipIsEmptyRegion", "UPtr", hRegion, "UPtr", pGraphics, "uInt*", result)
-   If E
-      return -1
+   gdipLastError := DllCall("gdiplus\GdipIsEmptyRegion", "UPtr", hRegion, "UPtr", pGraphics, "uInt*", result)
    Return result
 }
 
 Gdip_IsEqualRegion(pGraphics, hRegion1, hRegion2) {
    result := 0
-   E := DllCall("gdiplus\GdipIsEqualRegion", "UPtr", hRegion1, "UPtr", hRegion2, "UPtr", pGraphics, "uInt*", result)
-   If E
-      return -1
+   gdipLastError := DllCall("gdiplus\GdipIsEqualRegion", "UPtr", hRegion1, "UPtr", hRegion2, "UPtr", pGraphics, "uInt*", result)
    Return result
 }
 
@@ -6079,20 +6075,19 @@ Gdip_SetInfiniteRegion(hRegion) {
 }
 
 Gdip_GetRegionBounds(pGraphics, hRegion) {
-  rData := {}
   VarSetCapacity(RectF, 16, 0)
   E := DllCall("gdiplus\GdipGetRegionBounds", "UPtr", hRegion, "UPtr", pGraphics, "UPtr", &RectF)
 
   If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      Return rData
   } Else {
-    Return E
+      Return E
   }
-
-  return rData
 }
 
 Gdip_TranslateRegion(hRegion, X, Y) {
@@ -7003,20 +6998,19 @@ Gdip_GetPathWorldBounds(pPath, hMatrix:=0, pPen:=0) {
 ; pPen to use for calculating the boundaries
 ; Both will not affect the actual GraphicsPath.
 
-  rData := {}
   VarSetCapacity(RectF, 16, 0)
   E := DllCall("gdiplus\GdipGetPathWorldBounds", "UPtr", pPath, "UPtr", &RectF, "UPtr", hMatrix, "UPtr", pPen)
 
   If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      return rData
   } Else {
-    Return E
+      Return E
   }
-  
-  return rData
 }
 
 Gdip_ScaleMatrix(hMatrix, ScaleX, ScaleY, MatrixOrder:=0) {
@@ -7296,20 +7290,19 @@ Gdip_PathGradientGetWrapMode(pPathGradientBrush) {
 }
 
 Gdip_PathGradientGetRect(pPathGradientBrush) {
-  rData := {}
   VarSetCapacity(RectF, 16, 0)
   E := DllCall("gdiplus\GdipGetPathGradientRect", "UPtr", pPathGradientBrush, "UPtr", &RectF)
 
   If (!E) {
-        rData.x := NumGet(&RectF, 0, "float")
-      , rData.y := NumGet(&RectF, 4, "float")
-      , rData.w := NumGet(&RectF, 8, "float")
-      , rData.h := NumGet(&RectF, 12, "float")
+      rData := {}
+      rData.x := NumGet(&RectF, 0, "float")
+      rData.y := NumGet(&RectF, 4, "float")
+      rData.w := NumGet(&RectF, 8, "float")
+      rData.h := NumGet(&RectF, 12, "float")
+      return rData
   } Else {
-    Return E
+      Return E
   }
-
-  return rData
 }
 
 Gdip_PathGradientResetTransform(pPathGradientBrush) {
@@ -7700,7 +7693,7 @@ Gdip_CreateEffect(whichFX, paramA, paramB, paramC:=0) {
 
     ; r2 := GetStatus(A_LineNumber ":GdipCreateEffect", r2)
     If (whichFX=3)  ; Color matrix
-       GenerateColorMatrix(paramA, FXparams)
+       CreateColourMatrix(paramA, FXparams)
     Else
        VarSetCapacity(FXparams, 12, 0)
 
