@@ -4,9 +4,11 @@ https://github.com/telppa/BeautifulToolTip
 If you want to add your own style to the built-in style, you can add it directly in btt().
 
 version:
-2021.09.29
+2021.10.03
 
 changelog:
+2021.10.03
+  改变 Include 方式，降低库冲突的可能性。
 2021.09.29
   支持设置 TabStops 。
   除 GDIP 库外所有函数内置到 Class 中，降低库冲突的可能性。
@@ -811,7 +813,7 @@ Class BeautifulToolTip
     return &NONCLIENTMETRICS
   }
   
-  #Include %A_LineFile%\..\NonNull.ahk
+  #IncludeAgain %A_LineFile%\..\NonNull.ahk
 }
 
 #Include %A_LineFile%\..\Gdip_All.ahk

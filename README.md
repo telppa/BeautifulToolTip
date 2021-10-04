@@ -13,6 +13,8 @@
 ---  
   
 ### Changelog  
+#### 2021.10.03  
+* Change the Include way to reduce the possibility of library conflict.  
 #### 2021.09.29  
 * Add TabStops.  
 * All functions except GDIP library are built into Class.  
@@ -38,6 +40,8 @@
 ---  
   
 ### 更新日志  
+#### 2021.10.03  
+* 改变 Include 方式，降低库冲突的可能性。  
 #### 2021.09.29  
 * 支持设置 TabStops 。  
 * 除 GDIP 库外所有函数内置到 Class 中，降低库冲突的可能性。  
